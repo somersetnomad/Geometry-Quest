@@ -1,0 +1,1401 @@
+<title>Geometry Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: graph-paper field. Sticky HUD. Home = hero with guide + winding quest map + trophy shelf. World = colour banner, guide speech, illustrated labs, cheat sheet, challenge. */
+:root{
+  --paper:#F5F8FF; --grid:rgba(47,107,255,.07); --grid2:rgba(47,107,255,.14);
+  --ink:#161B3A; --muted:#566089; --card:#FFFFFF; --stage:#F1F5FF; --line:#D6DFF2; --soft:#EAF0FF; --gridline:#DCE4F6;
+  --c1:#FF3D7F; --c2:#2F6BFF; --c3:#FFB000; --c4:#00A88F; --c5:#7C4DFF;
+  --good:#00976F; --bad:#E0334A; --onc:#13173A;
+  --road:#30364F; --wood:#C8894B; --metal:#C3CCDD; --wall:#EBCDB3; --brick:#D9AE8C;
+  --ff-display:"Bricolage Grotesque","Trebuchet MS",system-ui,sans-serif;
+  --ff-body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --ff-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0C1330; --grid:rgba(120,160,255,.06); --grid2:rgba(120,160,255,.11);
+  --ink:#EDF1FF; --muted:#9CA8D2; --card:#141C40; --stage:#0F1736; --line:#29355F; --soft:#1A2450; --gridline:#1E2A55;
+  --c1:#FF5C93; --c2:#5E8EFF; --c3:#FFC531; --c4:#22D3B2; --c5:#A485FF; --good:#2BD9A6; --bad:#FF5F73;
+  --road:#283062; --wood:#B07A45; --metal:#8794B4; --wall:#4B3B49; --brick:#3B2E3A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0C1330; --grid:rgba(120,160,255,.06); --grid2:rgba(120,160,255,.11);
+  --ink:#EDF1FF; --muted:#9CA8D2; --card:#141C40; --stage:#0F1736; --line:#29355F; --soft:#1A2450; --gridline:#1E2A55;
+  --c1:#FF5C93; --c2:#5E8EFF; --c3:#FFC531; --c4:#22D3B2; --c5:#A485FF; --good:#2BD9A6; --bad:#FF5F73;
+  --road:#283062; --wood:#B07A45; --metal:#8794B4; --wall:#4B3B49; --brick:#3B2E3A; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background-color:var(--paper);color:var(--ink);font:400 17px/1.55 var(--ff-body);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px),linear-gradient(var(--grid2) 1px,transparent 1px),linear-gradient(90deg,var(--grid2) 1px,transparent 1px);
+  background-size:24px 24px,24px 24px,120px 120px,120px 120px;padding-inline:clamp(16px,4vw,40px);min-height:100vh;overflow-x:hidden}
+h1,h2,h3{font-family:var(--ff-display);text-wrap:balance;margin:0;line-height:1.05;letter-spacing:-.02em}
+p{margin:0}
+a{color:inherit}
+.mono{font-family:var(--ff-mono);font-variant-numeric:tabular-nums}
+.eyebrow{font:700 12px var(--ff-mono);text-transform:uppercase;letter-spacing:.14em;color:var(--muted)}
+:focus-visible{outline:3px solid var(--c2);outline-offset:3px}
+.view{animation:viewin .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes viewin{from{opacity:0;transform:translateY(16px)}}
+
+/* HUD */
+.hud{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;margin-inline:calc(-1*clamp(16px,4vw,40px));padding:10px clamp(16px,4vw,40px);display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1.5px solid var(--line)}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;font:800 20px var(--ff-display);letter-spacing:-.02em}
+.logo svg{width:30px;height:30px}
+.xp{display:flex;align-items:center;gap:10px;margin-left:auto;min-width:0}
+.rank{font:700 13px var(--ff-mono);background:var(--ink);color:var(--paper);padding:4px 10px;border-radius:999px;white-space:nowrap}
+.bar{width:clamp(80px,16vw,200px);height:12px;border-radius:99px;background:var(--soft);border:1.5px solid var(--ink);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--c1),var(--c3));transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.xpnum,.starcount{font:700 13px var(--ff-mono);white-space:nowrap}
+.starcount b{color:var(--c3)}
+.icon-btn{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;font:700 13px var(--ff-body);cursor:pointer}
+@media (max-width:560px){.bar,.xpnum{display:none}.logo span{font-size:17px}.hud{gap:10px}}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;font:700 15px var(--ff-body);padding:10px 18px;border-radius:999px;border:2px solid var(--ink);background:var(--card);color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--ink);transition:transform .12s cubic-bezier(.3,1.6,.5,1),box-shadow .12s;text-decoration:none;line-height:1.2}
+.btn:hover{transform:translateY(-2px);box-shadow:0 5px 0 var(--ink)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.btn.primary{background:var(--c1);color:#fff}
+.btn.on{background:var(--ink);color:var(--paper)}
+.btn.ghost{border-color:transparent;box-shadow:none;background:transparent;text-decoration:underline;text-underline-offset:3px}
+.btn.big{font-size:17px;padding:14px 24px}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+/* Mascot + guide */
+.mascot{display:block;width:100%;height:auto;overflow:visible}
+.mascot .mb{animation:idle 3.2s ease-in-out infinite;transform-origin:60px 112px}
+.mascot .me{animation:blink 4.6s infinite;transform-box:fill-box;transform-origin:center}
+.mascot .halo{animation:halo 2.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes idle{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+@keyframes halo{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.5);opacity:.4}}
+.guide{display:grid;grid-template-columns:clamp(86px,15vw,140px) minmax(0,1fr);gap:clamp(12px,2vw,22px);align-items:end}
+.bubble{position:relative;background:var(--card);border:2px solid var(--ink);border-radius:24px;padding:clamp(16px,2.5vw,24px);box-shadow:0 5px 0 var(--ink);display:grid;gap:14px;margin-bottom:22px}
+.bubble::before{content:"";position:absolute;left:-12px;bottom:28px;width:20px;height:20px;background:var(--card);border-left:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(45deg)}
+.g-text{font:700 clamp(19px,2.6vw,26px)/1.3 var(--ff-display);letter-spacing:-.01em}
+.g-text .w{display:inline-block;animation:word .4s both cubic-bezier(.2,.8,.2,1)}
+@keyframes word{from{opacity:0;transform:translateY(6px)}}
+.g-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.g-dots{display:flex;gap:6px}
+.g-dots i{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.g-dots i.on{background:var(--c1);width:24px;border-radius:9px}
+.g-name{font:700 12px var(--ff-mono);letter-spacing:.12em;text-transform:uppercase;color:var(--c1)}
+
+/* Home */
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(20px,4vw,56px);align-items:center;max-width:1180px;margin:0 auto;padding-block:clamp(28px,6vw,60px) 20px}
+.hero>div{min-width:0}
+.hero h1{font-size:clamp(42px,7vw,86px);font-weight:800;line-height:.95;margin-block:14px 18px}
+.hero h1 em{font-style:normal;background:linear-gradient(transparent 58%,color-mix(in srgb,var(--c3) 70%,transparent) 58%);padding-inline:.06em}
+.hero .lede{font-size:clamp(17px,2vw,20px);max-width:36ch;color:var(--muted)}
+.hero .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.hero .facts{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:22px;font:700 13px var(--ff-mono);color:var(--muted)}
+.hero .facts b{color:var(--ink);font-size:18px}
+.hero-art{position:relative;background:var(--card);border:2px solid var(--ink);border-radius:28px;box-shadow:0 8px 0 var(--ink);padding:10px;aspect-ratio:480/430;max-width:100%}
+.hero-art>svg.construct{width:100%;height:100%;display:block}
+.hero-art .cap{position:absolute;right:18px;top:14px;font:700 11px var(--ff-mono);color:var(--muted);letter-spacing:.08em}
+.hero-art .hm{position:absolute;left:-26px;bottom:-30px;width:clamp(96px,24%,140px)}
+.hero-art .hb{position:absolute;left:calc(clamp(96px,24%,140px) - 18px);bottom:46px;background:var(--ink);color:var(--paper);font:800 15px var(--ff-display);padding:9px 14px;border-radius:16px 16px 16px 4px;max-width:60%}
+.hero-art svg.float{position:absolute;width:44px;height:44px;animation:bob 5s ease-in-out infinite}
+.float.f1{top:-18px;right:30px;animation-delay:-1s}
+.float.f2{bottom:60px;right:-20px;animation-delay:-2.5s}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-12px) rotate(18deg)}}
+.hA,.hCA,.hCB,.hS{stroke-dasharray:1;stroke-dashoffset:0}
+.hA{animation:hAB 9s infinite}.hCA{animation:hCA 9s linear infinite}.hCB{animation:hCB 9s linear infinite}.hS{animation:hS 9s infinite}
+.hP{animation:hP 9s infinite}.hF{animation:hF 9s infinite}.hG{animation:hG 9s infinite}
+@keyframes hAB{0%{stroke-dashoffset:1}10%,100%{stroke-dashoffset:0}}
+@keyframes hCA{0%,10%{stroke-dashoffset:1}33%,100%{stroke-dashoffset:0}}
+@keyframes hCB{0%,33%{stroke-dashoffset:1}56%,100%{stroke-dashoffset:0}}
+@keyframes hP{0%,56%{opacity:0}61%,100%{opacity:1}}
+@keyframes hS{0%,61%{stroke-dashoffset:1}76%,100%{stroke-dashoffset:0}}
+@keyframes hF{0%,76%{opacity:0}84%,100%{opacity:1}}
+@keyframes hG{0%,90%{opacity:1}97%,100%{opacity:0}}
+
+.section{max-width:1180px;margin:0 auto;padding-block:36px 30px}
+.sec-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:12px;margin-bottom:22px}
+.sec-head h2{font-size:clamp(30px,4.4vw,48px)}
+.sec-head p{color:var(--muted);max-width:46ch}
+
+/* Quest map */
+.quest{position:relative;min-height:400px}
+.quest-svg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.qp-base{fill:none;stroke:var(--line);stroke-width:16;stroke-linecap:round}
+.qp-done{fill:none;stroke:var(--c3);stroke-width:16;stroke-linecap:round}
+.qp-dash{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-dasharray:3 11;stroke-linecap:round;opacity:.5}
+.node{position:absolute;width:156px;transform:translate(-50%,-50px);display:grid;justify-items:center;gap:8px;text-decoration:none;color:var(--ink);background:none;border:0;cursor:pointer;font:inherit;padding:0}
+.disc{width:100px;height:100px;border-radius:50%;background:var(--wc);border:3px solid var(--ink);box-shadow:0 7px 0 var(--ink);display:grid;place-items:center;position:relative;transition:transform .25s cubic-bezier(.3,1.7,.5,1)}
+.node:hover .disc,.node:focus-visible .disc{transform:translateY(-5px) scale(1.07) rotate(-3deg)}
+.disc svg{width:54px;height:54px;fill:none;stroke:var(--onc);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.disc svg .gf{fill:var(--onc)}
+.disc .num{position:absolute;top:-8px;right:-10px;width:34px;height:34px;border-radius:50%;background:var(--ink);color:var(--paper);font:800 14px/34px var(--ff-mono);text-align:center}
+.node .nt{font:800 17px/1.1 var(--ff-display);text-align:center;background:var(--paper);padding:3px 9px;border-radius:9px}
+.node .stars{font-size:16px}
+.node.locked .disc{background:var(--soft);box-shadow:0 7px 0 var(--line);border-color:var(--line)}
+.node.locked .disc svg{stroke:var(--muted);opacity:.35}
+.node.locked .nt{color:var(--muted)}
+.lock{position:absolute;inset:0;display:grid;place-items:center}
+.lock svg{width:34px;height:34px;stroke:var(--muted);opacity:1;stroke-width:3}
+.node.current .disc{animation:glow 1.8s infinite}
+@keyframes glow{0%{box-shadow:0 7px 0 var(--ink),0 0 0 0 color-mix(in srgb,var(--c1) 55%,transparent)}70%{box-shadow:0 7px 0 var(--ink),0 0 0 18px transparent}100%{box-shadow:0 7px 0 var(--ink),0 0 0 0 transparent}}
+.here{position:absolute;width:66px;pointer-events:none;transition:left .6s,top .6s}
+.here .tag{position:absolute;left:50%;top:-22px;transform:translateX(-50%);background:var(--c1);color:#fff;font:800 11px var(--ff-mono);padding:2px 8px;border-radius:99px;white-space:nowrap;letter-spacing:.06em}
+.boss-strip{max-width:1180px;margin:10px auto 10px;background:var(--ink);color:var(--paper);border-radius:26px;padding:clamp(20px,4vw,34px);display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between}
+.boss-strip h2{font-size:clamp(28px,4vw,42px)}
+.boss-strip p{opacity:.8;max-width:50ch}
+.boss-strip .btn{border-color:var(--paper);box-shadow:0 3px 0 var(--paper)}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:18px}
+.badge{display:grid;justify-items:center;text-align:center;gap:6px}
+.medal{width:76px;height:76px;border-radius:50%;border:3px solid var(--ink);background:var(--bc);display:grid;place-items:center;box-shadow:0 5px 0 var(--ink);position:relative}
+.medal::after{content:"";position:absolute;inset:6px;border-radius:50%;border:2px dashed color-mix(in srgb,var(--onc) 35%,transparent)}
+.medal svg{width:38px;height:38px;fill:none;stroke:var(--onc);stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+.medal svg .gf{fill:var(--onc)}
+.badge b{font:800 15px/1.15 var(--ff-display)}
+.badge span{font-size:13px;color:var(--muted);line-height:1.3}
+.badge.off .medal{background:var(--soft);border-color:var(--line);box-shadow:none}
+.badge.off .medal svg{stroke:var(--muted);opacity:.45}
+.badge.off .medal svg .gf{fill:var(--muted)}
+.badge.off b{color:var(--muted)}
+footer{max-width:1180px;margin:30px auto 0;padding-block:20px 50px;color:var(--muted);font-size:13px;border-top:1.5px solid var(--line);display:flex;gap:12px;flex-wrap:wrap;justify-content:space-between}
+
+/* World page */
+.world{max-width:1000px;margin:0 auto;display:grid;gap:30px;padding-block:22px 80px}
+.back{font:700 14px var(--ff-mono);text-decoration:none;color:var(--muted)}
+.back:hover{color:var(--ink)}
+.banner{background:var(--wc);color:var(--onc);border:2px solid var(--ink);border-radius:30px;box-shadow:0 7px 0 var(--ink);padding:clamp(22px,4vw,40px);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;position:relative;overflow:hidden;
+  background-image:radial-gradient(rgba(19,23,58,.14) 1.6px,transparent 1.8px);background-size:20px 20px}
+.banner .wnum{font:800 13px var(--ff-mono);letter-spacing:.14em;text-transform:uppercase;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.banner .wnum .stars{font-size:18px;letter-spacing:2px}
+.banner .wnum .stars,.banner .wnum .stars .off{color:var(--onc)}
+.banner .wnum .stars .off{opacity:.25}
+.banner h1{font-size:clamp(46px,9vw,100px);font-weight:800;margin-block:10px 8px;color:var(--onc)}
+.banner .w-tag{font-size:clamp(18px,2.2vw,22px);font-weight:700;opacity:.8}
+.banner .art{width:clamp(90px,20vw,190px);height:auto;fill:none;stroke:var(--onc);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transform:rotate(-8deg);animation:spin-in .9s cubic-bezier(.3,1.5,.5,1)}
+.banner .art .gf{fill:var(--onc)}
+@keyframes spin-in{from{transform:rotate(-60deg) scale(.6)}}
+.sec-title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.sec-title h2{font-size:clamp(28px,4vw,40px)}
+.sec-title span{color:var(--muted)}
+.labs{display:grid;gap:24px}
+.lab{background:var(--card);border:2px solid var(--ink);border-radius:26px;padding:clamp(14px,3vw,24px);display:grid;gap:14px;box-shadow:0 6px 0 var(--ink);min-width:0}
+.lab-head{display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap}
+.lab-head h3{font-size:clamp(22px,3vw,30px)}
+.lab-head p{color:var(--muted);margin-top:4px;max-width:62ch}
+.lab-tag{font:700 11px var(--ff-mono);letter-spacing:.12em;text-transform:uppercase;background:var(--soft);color:var(--muted);padding:5px 10px;border-radius:99px;white-space:nowrap}
+.stage{width:100%;height:auto;display:block;background:var(--stage);border-radius:18px;border:1.5px solid var(--line);user-select:none;-webkit-user-select:none}
+.readout{font-size:16px;line-height:1.6;background:var(--soft);border-radius:14px;padding:12px 16px;min-height:3.2em;overflow-wrap:anywhere}
+.good{color:var(--good)} .bad{color:var(--bad)}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.slider{display:flex;align-items:center;gap:10px;font-weight:700;flex:1 1 220px;min-width:0}
+.slider span{white-space:nowrap}
+.slider input{flex:1;min-width:0;accent-color:var(--c1);height:28px}
+.slider output{font:700 15px var(--ff-mono);min-width:3ch;text-align:right}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;background:var(--ink);color:var(--paper);font:700 13px var(--ff-mono);margin:0 6px 4px 0;vertical-align:middle}
+.pill.c{background:var(--pc);color:var(--onc)}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--pc);margin-right:6px;vertical-align:-1px;border:1.5px solid var(--ink)}
+.ol{text-decoration:overline;font-family:var(--ff-mono);font-weight:700}
+.arr{position:relative;display:inline-block;font-family:var(--ff-mono);font-weight:700;padding-top:.5em}
+.arr::before{content:attr(data-a);position:absolute;top:-.25em;left:0;right:0;text-align:center;font-size:.85em;line-height:1}
+.life{display:inline-block;margin-top:6px;font-weight:700}
+.life::before{content:"Spot it IRL: ";font:700 12px var(--ff-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--c1)}
+.seg{display:inline-flex;border:2px solid var(--ink);border-radius:999px;overflow:hidden;flex-wrap:wrap}
+.seg button{border:0;background:var(--card);color:var(--ink);font:700 14px var(--ff-body);padding:9px 14px;cursor:pointer}
+.seg button+button{border-left:2px solid var(--ink)}
+.seg button.on{background:var(--ink);color:var(--paper)}
+@media (max-width:560px){.seg button{padding:8px 10px;font-size:13px}}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip-btn{border:1.5px solid var(--line);background:var(--soft);color:var(--ink);border-radius:999px;padding:7px 13px;font:700 13px var(--ff-body);cursor:pointer;transition:transform .15s}
+.chip-btn:hover{border-color:var(--ink);transform:translateY(-1px)}
+.chip-btn b{font-family:var(--ff-mono);color:var(--c1)}
+.canvas-wrap{width:100%;border-radius:18px;overflow:hidden;border:1.5px solid var(--line);background:var(--stage)}
+canvas.sym{display:block;width:100%;touch-action:none;cursor:crosshair}
+.steps{display:grid;gap:10px;counter-reset:st}
+.stepcard{background:var(--soft);border-radius:14px;padding:12px 16px 12px 52px;position:relative;animation:pop .35s ease}
+.stepcard::before{counter-increment:st;content:counter(st);position:absolute;left:14px;top:11px;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--paper);font:700 13px/26px var(--ff-mono);text-align:center}
+.stepcard.last{background:color-mix(in srgb,var(--c4) 22%,var(--card))}
+@keyframes pop{from{transform:translateY(8px) scale(.98);opacity:.3}to{transform:none;opacity:1}}
+
+/* SVG parts */
+.s-main{stroke:var(--c2);stroke-width:4;stroke-linecap:round;fill:none}
+.s-line{stroke:var(--ink);stroke-width:3;stroke-linecap:round;fill:none}
+.s-rail{stroke:var(--ink);stroke-width:5;stroke-linecap:round}
+.s-faint{stroke:var(--line);stroke-width:2;stroke-dasharray:4 6;fill:none}
+.s-guide{stroke:var(--c3);stroke-width:2.5;stroke-dasharray:7 7}
+.s-dash{stroke:var(--muted);stroke-width:2;stroke-dasharray:6 6;fill:none}
+.s-arm{stroke:var(--ink);stroke-width:5;stroke-linecap:round}
+.s-c1{stroke:var(--c1);stroke-width:2.5;fill:none}
+.s-c2{stroke:var(--c2);stroke-width:2.5;fill:none}
+.s-hl1{stroke:var(--c1);stroke-width:8;stroke-linecap:round;fill:none}
+.s-hl2{stroke:var(--c4);stroke-width:8;stroke-linecap:round;fill:none}
+.thin{stroke-width:3}
+.f-ink{fill:var(--ink)} .f-muted{fill:var(--muted)}
+.arrowhead{fill:var(--c2)}
+.glow{stroke:var(--c1);stroke-width:16;stroke-linecap:round;opacity:.22}
+.zoomdot{fill:var(--c1);transition:r .6s cubic-bezier(.2,.8,.2,1)}
+.gl{stroke:var(--gridline);stroke-width:1}
+.tick-p{stroke:var(--muted);stroke-width:1.5}
+.t-prot{font:500 11px var(--ff-mono);fill:var(--muted)}
+.tri{fill:none;stroke:var(--ink);stroke-width:3.5;stroke-linejoin:round}
+.tri-fill{fill:var(--c3);fill-opacity:.2}
+.poly{fill:var(--c4);fill-opacity:.15;stroke:var(--ink);stroke-width:3.5;stroke-linejoin:round}
+.poly.alt{fill:var(--c5)}
+.ptri0{fill:var(--c4);fill-opacity:.18}.ptri1{fill:var(--c2);fill-opacity:.14}
+.road{stroke:var(--road);stroke-width:46;stroke-linecap:butt}
+.roadline{stroke:#fff;stroke-width:3;stroke-dasharray:14 12;opacity:.85}
+.sleeper{fill:var(--wood);opacity:.45}
+.blade{fill:var(--metal);stroke:var(--ink);stroke-width:2.5;stroke-linejoin:round}
+.ring{fill:none;stroke-width:11;stroke-linecap:round}
+.trail{stroke:var(--c1);stroke-width:6;stroke-linecap:round}
+.tick{stroke-width:8;stroke-linecap:butt}
+.koch{fill:var(--c2);fill-opacity:.12;stroke:var(--c2);stroke-width:2;stroke-linejoin:round}
+.cbar{fill:var(--c5)}
+.paper{stroke:var(--ink);stroke-width:2.5}
+.p0{fill:var(--c1);fill-opacity:.16}.p1{fill:var(--c2);fill-opacity:.16}.p2{fill:var(--c3);fill-opacity:.22}.p3{fill:var(--c4);fill-opacity:.18}.p4{fill:var(--c5);fill-opacity:.18}
+.sq-a{fill:var(--c1);fill-opacity:.2;stroke:var(--c1);stroke-width:2.5}
+.sq-b{fill:var(--c2);fill-opacity:.2;stroke:var(--c2);stroke-width:2.5}
+.sq-c{fill:var(--c3);fill-opacity:.25;stroke:var(--c3);stroke-width:2.5}
+.bar-frame{stroke:var(--ink);stroke-width:7;stroke-linecap:round}
+.stick{stroke:var(--wood);stroke-width:11;stroke-linecap:round}
+.brace{stroke:var(--c1);stroke-width:7;stroke-linecap:round}
+.hinge{fill:var(--card);stroke:var(--ink);stroke-width:3}
+.wall{fill:var(--wall)} .brick{stroke:var(--brick);stroke-width:2}
+.t-big{font:800 40px var(--ff-display);fill:var(--ink);letter-spacing:-.02em}
+.t-type{font:800 22px var(--ff-display)}
+.t-small{font:500 14px var(--ff-mono);fill:var(--muted)}
+.t-ang{font:700 15px var(--ff-mono);fill:var(--ink);paint-order:stroke;stroke:var(--stage);stroke-width:4px}
+.t-name{font:800 20px var(--ff-display);fill:var(--ink)}
+.t-side{font:500 13px var(--ff-mono);fill:var(--muted)}
+.t-area{font:700 15px var(--ff-mono);fill:var(--ink);paint-order:stroke;stroke:var(--stage);stroke-width:4px}
+.handle{cursor:grab;touch-action:none;outline:none}
+.handle.grab{cursor:grabbing}
+.handle .hit{fill:transparent}
+.handle .ring2{fill:var(--c1);opacity:.25;transform-box:fill-box;transform-origin:center;animation:pulse 1.8s ease-out infinite}
+.handle .dot{fill:var(--c1);stroke:var(--card);stroke-width:3;transition:r .15s}
+.handle.grab .dot{r:13}
+.handle.h-alt .dot,.handle.h-alt .ring2{fill:var(--c2)}
+.handle:focus-visible .dot{stroke:var(--ink);stroke-width:4}
+@keyframes pulse{0%{transform:scale(.7);opacity:.45}100%{transform:scale(1.7);opacity:0}}
+.drawin{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .9s ease forwards}
+.drawlin{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.1s linear forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* 3D nets */
+.scene3d{height:clamp(300px,56vw,420px);perspective:1100px;position:relative;display:grid;place-items:center;background:var(--stage);border:1.5px solid var(--line);border-radius:18px;overflow:hidden;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.rig{position:relative;width:0;height:0;transform-style:preserve-3d}
+.f3{position:absolute;transform-style:preserve-3d}
+.f3>svg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible}
+.hinge3{position:absolute;width:0;height:0;transform-style:preserve-3d}
+/* Report + print */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{background:var(--card);border:2px solid var(--ink);border-radius:18px;padding:14px 16px;box-shadow:0 4px 0 var(--ink);display:grid;gap:2px}
+.tile b{font:800 32px/1.1 var(--ff-display);font-variant-numeric:tabular-nums}
+.tile small{font-size:16px;color:var(--muted);font-weight:700}
+.tile span{color:var(--muted);font-size:14px}
+.tablewrap{overflow-x:auto;border:2px solid var(--ink);border-radius:18px;background:var(--card)}
+table.rep{width:100%;border-collapse:collapse;font-size:15px;min-width:680px}
+.rep th,.rep td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+.rep th{font:700 11px var(--ff-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:var(--soft)}
+.rep td:nth-child(2){color:var(--muted);font-size:13px}
+.rep tr:last-child td{border-bottom:0}
+.codebox{font:800 clamp(20px,4.4vw,34px) var(--ff-mono);letter-spacing:.06em;background:var(--soft);border:2px dashed var(--ink);border-radius:16px;padding:14px 18px;user-select:all;-webkit-user-select:all;overflow-wrap:anywhere;text-align:center}
+.sumtext{white-space:pre-wrap;font:500 13px/1.55 var(--ff-mono);background:var(--soft);border-radius:14px;padding:14px 16px;max-height:340px;overflow:auto;margin:0;user-select:text;-webkit-user-select:text}
+.print{background:color-mix(in srgb,var(--wc) 12%,var(--card))}
+.print-grid{display:grid;grid-template-columns:clamp(64px,10vw,100px) minmax(0,1fr);gap:18px;align-items:center}
+.print h3{font-size:clamp(22px,3vw,28px);margin-block:6px}
+.muted{color:var(--muted)} .small{font-size:13px;color:var(--muted);margin-top:8px}
+.banner .rm{width:clamp(90px,16vw,150px)}
+.curr{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:rgba(19,23,58,.12);border-radius:99px;padding:5px 12px;font:700 12px var(--ff-mono);letter-spacing:.04em}
+/* Cheat sheet */
+.ideas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px}
+.idea{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:16px 18px;display:grid;gap:6px;align-content:start;min-width:0;transition:transform .2s,border-color .2s}
+.idea:hover{transform:translateY(-3px);border-color:var(--ink)}
+.idea h3{font-size:19px;letter-spacing:-.01em}
+.idea p{color:var(--muted);font-size:15px}
+.idea .k{width:26px;height:26px;border-radius:7px;background:var(--wc);border:2px solid var(--ink);transform:rotate(-8deg)}
+.idea:nth-child(3n+2) .k{border-radius:50%;transform:none}
+.idea:nth-child(3n) .k{clip-path:polygon(50% 0,100% 100%,0 100%);border:0;background:var(--ink)}
+
+/* Challenge */
+.challenge{background:var(--card);border:2px solid var(--ink);border-radius:28px;box-shadow:0 7px 0 var(--ink);padding:clamp(18px,3.5vw,32px);display:grid;gap:18px}
+.ch-head{display:grid;grid-template-columns:clamp(64px,10vw,88px) minmax(0,1fr);gap:16px;align-items:center}
+.ch-head h2{font-size:clamp(28px,4vw,40px);margin-top:4px}
+.ch-say{font:700 16px var(--ff-display);color:var(--muted);margin-top:6px;min-height:1.4em}
+.qmeta{display:flex;justify-content:space-between;align-items:center;font:700 13px var(--ff-mono);color:var(--muted);gap:10px;flex-wrap:wrap}
+.qtype{background:var(--soft);padding:3px 9px;border-radius:99px}
+.dots{display:flex;gap:6px}
+.dots i{width:22px;height:8px;border-radius:9px;background:var(--line)}
+.dots i.done{background:var(--c4)}.dots i.now{background:var(--c1)}
+.q{font-size:clamp(21px,2.8vw,28px);margin-block:10px 14px;line-height:1.2}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:620px){.opts{grid-template-columns:1fr}}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;border:2px solid var(--line);background:var(--soft);color:var(--ink);border-radius:16px;padding:12px 14px;font:700 16px var(--ff-body);cursor:pointer;transition:border-color .15s,transform .15s cubic-bezier(.3,1.6,.5,1)}
+.opt:hover:not(:disabled){border-color:var(--ink);transform:translateY(-2px)}
+.opt .key{flex:none;width:30px;height:30px;border-radius:9px;background:var(--card);border:1.5px solid var(--line);font:700 14px/27px var(--ff-mono);text-align:center}
+.opt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 18%,var(--card))}
+.opt.right .key{background:var(--good);color:#fff;border-color:var(--good)}
+.opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--card))}
+.opt:disabled{cursor:default}
+.numrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.numrow input{font:800 28px var(--ff-mono);width:min(220px,100%);padding:10px 16px;border-radius:16px;border:2px solid var(--ink);background:var(--soft);color:var(--ink)}
+.numrow .unit{font:800 24px var(--ff-mono);color:var(--muted)}
+.why{margin-top:14px;background:var(--soft);border-radius:14px;padding:12px 16px}
+.streak{display:inline-block;background:var(--c3);color:var(--onc);font:700 12px var(--ff-mono);padding:2px 8px;border-radius:99px;margin:0 6px}
+.qnav{margin-top:14px;display:flex;gap:10px}
+.shake{animation:shake .38s}
+@keyframes shake{20%{transform:translateX(-7px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
+.result{text-align:center;display:grid;gap:10px;justify-items:center;padding-block:10px}
+.result .rm{width:120px}
+.big-stars{font-size:54px;color:var(--c3);letter-spacing:6px}
+.big-stars .off,.stars .off{color:var(--line)}
+.stars{color:var(--c3);letter-spacing:2px}
+.result h3{font-size:30px}
+.result p{color:var(--muted);max-width:44ch}
+.wnav{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+/* Boss */
+.boss{max-width:820px;margin:0 auto;padding-block:22px 80px;display:grid;gap:22px}
+.boss-box{background:var(--card);border:2px solid var(--ink);border-radius:28px;box-shadow:0 7px 0 var(--ink);padding:clamp(18px,4vw,36px);display:grid;gap:16px}
+.boss-box h1{font-size:clamp(40px,7vw,72px)}
+.boss-box > p{color:var(--muted);font-size:18px;max-width:52ch}
+.boss-top{display:grid;grid-template-columns:minmax(0,1fr) clamp(80px,16vw,130px);gap:16px;align-items:center}
+.timer{height:16px;border-radius:99px;border:2px solid var(--ink);overflow:hidden;background:var(--soft)}
+.timer i{display:block;height:100%;background:linear-gradient(90deg,var(--c1),var(--c3));width:100%}
+.bstat{display:flex;justify-content:space-between;font:700 16px var(--ff-mono)}
+.flash-good{animation:fg .4s}.flash-bad{animation:fb .4s}
+@keyframes fg{from{background:color-mix(in srgb,var(--good) 30%,var(--card))}}
+@keyframes fb{from{background:color-mix(in srgb,var(--bad) 30%,var(--card))}}
+
+/* Overlays */
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:90}
+.xpfloat{position:fixed;z-index:95;pointer-events:none;font:800 22px var(--ff-display);color:var(--c1);animation:rise 1.1s ease-out forwards}
+@keyframes rise{from{transform:translate(-50%,0) scale(.8);opacity:1}30%{transform:translate(-50%,-20px) scale(1.15)}to{transform:translate(-50%,-70px) scale(1);opacity:0}}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 18px 10px 10px;border-radius:999px;font-weight:700;z-index:95;animation:toastin .45s cubic-bezier(.3,1.6,.5,1);display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px)}
+.toast .tm{width:44px;height:44px;border-radius:50%;background:var(--c3);display:grid;place-items:center;border:2px solid var(--paper);flex:none}
+.toast .tm svg{width:24px;height:24px;fill:none;stroke:var(--onc);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.toast .tm svg .gf{fill:var(--onc)}
+.toast small{display:block;font:700 11px var(--ff-mono);letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+@keyframes toastin{from{transform:translate(-50%,40px);opacity:0}}
+.modal-back{position:fixed;inset:0;background:color-mix(in srgb,#0A0E24 55%,transparent);display:grid;place-items:center;z-index:85;padding:16px}
+.modal{background:var(--card);border:2px solid var(--ink);border-radius:30px;box-shadow:0 9px 0 var(--ink);max-width:540px;width:100%;padding:clamp(20px,4vw,32px);display:grid;gap:16px;animation:pop .45s cubic-bezier(.3,1.5,.5,1)}
+.modal .mm{width:120px;justify-self:center;margin-top:-80px}
+.modal h2{font-size:clamp(28px,5vw,38px);text-align:center}
+.modal p{color:var(--muted);text-align:center}
+.modal input{font:700 20px var(--ff-body);padding:12px 16px;border-radius:16px;border:2px solid var(--ink);background:var(--soft);color:var(--ink);width:100%}
+.modal .controls{justify-content:center}
+@media (max-width:760px){.banner .rm{position:absolute;right:-6px;top:-8px;width:96px;opacity:.9}.hero{grid-template-columns:1fr}.hero-art{max-width:470px;margin-inline:auto 10px}.banner{grid-template-columns:1fr}.banner .art{position:absolute;right:-14px;top:-10px;opacity:.28;width:150px}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .hA,.hCA,.hCB,.hS{stroke-dashoffset:0}.hP,.hF,.hG{opacity:1}
+  .drawin,.drawlin{stroke-dashoffset:0}
+}
+</style>
+
+<header class="hud">
+  <a href="#" class="logo" aria-label="Geometry Quest home">
+    <svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="15" cy="24" r="11" fill="none" stroke="var(--c2)" stroke-width="3"/><circle cx="25" cy="24" r="11" fill="none" stroke="var(--c1)" stroke-width="3"/><path d="M15 24H25L20 15.3Z" fill="var(--c3)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/></svg>
+    <span>Geometry Quest</span>
+  </a>
+  <div class="xp">
+    <span class="rank" id="rank">Dot</span>
+    <div class="bar" aria-hidden="true"><i id="xpbar"></i></div>
+    <span class="xpnum" id="xpnum">0 XP</span>
+    <span class="starcount" id="starcount"></span>
+    <a class="icon-btn" href="#report" style="text-decoration:none">Report</a>
+    <button class="icon-btn" id="snd" type="button">Sound on</button>
+  </div>
+</header>
+<main id="app"></main>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<script>
+/* ================= helpers ================= */
+const $=(s,r=document)=>r.querySelector(s);
+const NS="http://www.w3.org/2000/svg";
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function E(tag,attrs,parent){const e=document.createElementNS(NS,tag);if(attrs)for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e;}
+function H(tag,attrs,html,parent){const e=document.createElement(tag);if(attrs)for(const k in attrs){if(k==='class')e.className=attrs[k];else e.setAttribute(k,attrs[k]);}if(html!=null)e.innerHTML=html;if(parent)parent.appendChild(e);return e;}
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+function tween(dur,fn,done,lin){if(RM){fn(1);done&&done();return;}const t0=performance.now();function f(now){const t=Math.min(1,(now-t0)/dur);fn(lin?t:ease(t));if(t<1)requestAnimationFrame(f);else done&&done();}requestAnimationFrame(f);}
+const SUP={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','-':'⁻'};
+function fmt(v){if(v>=0.01)return String(+v.toFixed(2));const e=Math.floor(Math.log10(v));const m=(v/Math.pow(10,e)).toFixed(1);return m+' × 10'+String(e).split('').map(c=>SUP[c]).join('');}
+function polar(cx,cy,r,a){const t=a*Math.PI/180;return [cx+r*Math.cos(t),cy-r*Math.sin(t)];}
+function wedge(cx,cy,r,a0,a1){let d=`M${cx.toFixed(1)},${cy.toFixed(1)}`;const n=Math.max(2,Math.ceil(Math.abs(a1-a0)/4));for(let i=0;i<=n;i++){const [x,y]=polar(cx,cy,r,a0+(a1-a0)*i/n);d+=`L${x.toFixed(1)},${y.toFixed(1)}`;}return d+'Z';}
+function mathAng(V,P){return Math.atan2(-(P.y-V.y),P.x-V.x)*180/Math.PI;}
+function angSpan(V,P,Q){const a=mathAng(V,P),b=mathAng(V,Q);const d=((b-a)%360+360)%360;return d>180?[b,b+360-d]:[a,a+d];}
+function starStr(n){return '★'.repeat(n)+`<span class="off">${'★'.repeat(3-n)}</span>`;}
+function stage(parent,w,h,label){const s=E('svg',{viewBox:`0 0 ${w} ${h}`,class:'stage',role:'img','aria-label':label||'Interactive diagram'});parent.appendChild(s);return s;}
+function svgPt(svg,e){const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse());}
+function gridSVG(s,w,h,step){const g=E('g',{},s);for(let x=step;x<w;x+=step)E('line',{x1:x,y1:0,x2:x,y2:h,class:'gl'},g);for(let y=step;y<h;y+=step)E('line',{x1:0,y1:y,x2:w,y2:y,class:'gl'},g);return g;}
+function handle(svg,x,y,cls,onMove,label){
+  const g=E('g',{class:'handle '+(cls||''),tabindex:0,role:'slider','aria-label':label||'Drag handle'},svg);
+  E('circle',{r:26,class:'hit'},g);E('circle',{r:15,class:'ring2'},g);E('circle',{r:10,class:'dot'},g);
+  g.set=(x,y)=>{g._x=x;g._y=y;g.setAttribute('transform',`translate(${x.toFixed(1)},${y.toFixed(1)})`);};g.set(x,y);
+  g.addEventListener('pointerdown',e=>{e.preventDefault();g.setPointerCapture(e.pointerId);g.classList.add('grab');sfx('pop');
+    const mv=ev=>{const p=svgPt(svg,ev);onMove(p.x,p.y);};
+    const up=()=>{g.classList.remove('grab');g.removeEventListener('pointermove',mv);g.removeEventListener('pointerup',up);g.removeEventListener('pointercancel',up);};
+    g.addEventListener('pointermove',mv);g.addEventListener('pointerup',up);g.addEventListener('pointercancel',up);});
+  g.addEventListener('keydown',e=>{const k={ArrowLeft:[-6,0],ArrowRight:[6,0],ArrowUp:[0,-6],ArrowDown:[0,6]}[e.key];if(k){e.preventDefault();onMove(g._x+k[0],g._y+k[1]);}});
+  return g;}
+function panel(root,title,sub,tag){const p=H('section',{class:'lab'},null,root);H('div',{class:'lab-head'},`<div><h3>${title}</h3>${sub?`<p>${sub}</p>`:''}</div>${tag?`<span class="lab-tag">${tag}</span>`:''}`,p);return p;}
+const readout=p=>H('div',{class:'readout','aria-live':'polite'},'',p);
+const controls=p=>H('div',{class:'controls'},'',p);
+function btn(parent,label,fn,cls){const b=H('button',{class:'btn '+(cls||''),type:'button'},label,parent);b.onclick=e=>{sfx('click');fn(e);};return b;}
+function slider(parent,id,label,min,max,val,step,fn){const w=H('label',{class:'slider',for:id},`<span>${label}</span>`,parent);const i=H('input',{type:'range',id,min,max,value:val,step:step||1},null,w);const o=H('output',{for:id},String(val),w);i.oninput=()=>{o.textContent=i.value;fn(+i.value);};return {input:i,set(v){i.value=v;o.textContent=v;}};}
+function segmented(parent,items,cur,fn){const g=H('div',{class:'seg',role:'group'},null,parent);const bs=items.map(([k,l])=>{const b=H('button',{type:'button',class:k===cur?'on':''},l,g);b.onclick=()=>{bs.forEach(x=>x.classList.remove('on'));b.classList.add('on');fn(k);};return b;});return g;}
+function centerOf(el){const r=el.getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2];}
+
+/* ================= mascot: Vertex ================= */
+function mascot(mood='happy'){
+  const O='#13173A';
+  const pupil={happy:[0,1],cheer:[0,0],wow:[0,0],think:[3,-3],oops:[-2,2]}[mood]||[0,1];
+  const mouth={happy:`<path d="M49 84Q60 95 71 84" fill="none" stroke="${O}" stroke-width="4" stroke-linecap="round"/>`,
+    cheer:`<path d="M46 81Q60 104 74 81Z" fill="${O}"/><path d="M53 92Q60 97 67 92" fill="#FF6F9C"/>`,
+    wow:`<ellipse cx="60" cy="88" rx="6" ry="8" fill="${O}"/>`,
+    think:`<path d="M51 88H69" stroke="${O}" stroke-width="4" stroke-linecap="round"/>`,
+    oops:`<path d="M47 90Q53 84 59 90Q65 96 72 89" fill="none" stroke="${O}" stroke-width="4" stroke-linecap="round"/>`}[mood];
+  const arms=mood==='cheer'?`<path d="M24 82L8 58M96 82L112 58" stroke="${O}" stroke-width="5" stroke-linecap="round"/><circle cx="8" cy="56" r="5" fill="${O}"/><circle cx="112" cy="56" r="5" fill="${O}"/>`
+    :mood==='think'?`<path d="M24 86L12 96M96 84L84 72" stroke="${O}" stroke-width="5" stroke-linecap="round"/>`
+    :`<path d="M24 86L10 98M96 86L110 98" stroke="${O}" stroke-width="5" stroke-linecap="round"/>`;
+  const brows=mood==='think'?`<path d="M38 46L52 44M68 42L82 46" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/>`:mood==='oops'?`<path d="M38 44L52 48M68 48L82 44" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/>`:mood==='wow'?`<path d="M38 42Q45 37 52 42M68 42Q75 37 82 42" fill="none" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/>`:'';
+  const sweat=mood==='oops'?`<path d="M96 40Q100 48 96 52Q92 48 96 40Z" fill="#5EC8FF" stroke="${O}" stroke-width="2"/>`:'';
+  return `<svg class="mascot" viewBox="-6 -10 132 140" aria-hidden="true"><g class="mb">
+   <circle class="halo" cx="60" cy="6" r="9" fill="var(--c1)" opacity=".5"/>
+   <ellipse cx="44" cy="117" rx="11" ry="6" fill="${O}"/><ellipse cx="76" cy="117" rx="11" ry="6" fill="${O}"/>
+   ${arms}
+   <path d="M60 8Q67 8 71 16L110 92Q115 108 98 110H22Q5 108 10 92L49 16Q53 8 60 8Z" fill="#FFC531" stroke="${O}" stroke-width="5" stroke-linejoin="round"/>
+   <path d="M60 22L22 98" stroke="#FFE08A" stroke-width="6" stroke-linecap="round" opacity=".8"/>
+   <circle cx="60" cy="8" r="6" fill="var(--c1)" stroke="${O}" stroke-width="3"/>
+   <ellipse cx="36" cy="86" rx="7" ry="4.5" fill="#FF6F9C" opacity=".55"/><ellipse cx="84" cy="86" rx="7" ry="4.5" fill="#FF6F9C" opacity=".55"/>
+   ${brows}
+   <g class="me"><circle cx="46" cy="62" r="12" fill="#fff" stroke="${O}" stroke-width="3.5"/><circle cx="74" cy="62" r="12" fill="#fff" stroke="${O}" stroke-width="3.5"/>
+   <circle cx="${46+pupil[0]}" cy="${62+pupil[1]}" r="5.5" fill="${O}"/><circle cx="${74+pupil[0]}" cy="${62+pupil[1]}" r="5.5" fill="${O}"/>
+   <circle cx="${48+pupil[0]}" cy="${60+pupil[1]}" r="1.8" fill="#fff"/><circle cx="${76+pupil[0]}" cy="${60+pupil[1]}" r="1.8" fill="#fff"/></g>
+   ${mouth}${sweat}</g></svg>`;}
+function wordify(t){return t.split(' ').map((w,i)=>`<span class="w" style="animation-delay:${i*35}ms">${w}</span>`).join(' ');}
+function guide(parent,lines,endFn){
+  const w=H('div',{class:'guide'},null,parent);const m=H('div',{},mascot('wow'),w);const b=H('div',{class:'bubble'},null,w);let i=0;
+  function show(){b.innerHTML=`<span class="g-name">Vertex says</span><p class="g-text">${wordify(lines[i].replace('{name}',S.name||'friend'))}</p><div class="g-foot"><span class="g-dots">${lines.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join('')}</span><span class="g-act"></span></div>`;
+    const act=$('.g-act',b);if(i<lines.length-1){btn(act,'Next →',()=>{i++;show();},'primary');}else if(endFn){endFn(act);}
+    m.innerHTML=mascot(i===0?'wow':i===lines.length-1?'cheer':'happy');}
+  show();return {mood:md=>m.innerHTML=mascot(md)};}
+
+/* ================= state, XP, sound, confetti, badges ================= */
+const KEY='geometry-quest-v1';
+let S={xp:0,stars:{},got:{},boss:0,sound:true,name:'',badges:{},explore:false,seen:false};
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r));}catch(e){}
+S.badges=S.badges||{};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+const RANKS=[[0,'Dot'],[50,'Segment'],[120,'Ray'],[220,'Angle Ace'],[340,'Shape Shifter'],[480,'Compass Wizard'],[640,"Euclid's Rival"]];
+const rankIdx=()=>{let i=0;RANKS.forEach((r,k)=>{if(S.xp>=r[0])i=k;});return i;};
+const totalStars=()=>Object.values(S.stars).reduce((a,b)=>a+b,0);
+function updateHUD(){const i=rankIdx(),cur=RANKS[i][0],nxt=RANKS[i+1]?RANKS[i+1][0]:cur+200;
+  $('#rank').textContent=RANKS[i][1];$('#xpbar').style.width=clamp((S.xp-cur)/(nxt-cur)*100,3,100)+'%';$('#xpnum').textContent=S.xp+' XP';
+  $('#starcount').innerHTML=`<b>★</b> ${totalStars()}/${WORLDS.length*3}`;$('#snd').textContent=S.sound?'Sound on':'Sound off';$('#snd').setAttribute('aria-pressed',String(S.sound));}
+function addXP(n,x,y){if(!n)return;const before=rankIdx();S.xp+=n;save();updateHUD();
+  const f=H('div',{class:'xpfloat'},'+'+n+' XP',document.body);f.style.left=(x||innerWidth/2)+'px';f.style.top=((y||innerHeight/2)-20)+'px';setTimeout(()=>f.remove(),1200);
+  const after=rankIdx();if(after>before){setTimeout(()=>{toast(`New rank: <b>${RANKS[after][1]}</b>`,'Level up!',GLYPH.triangles);burst(innerWidth/2,innerHeight/3,100);sfx('win');},600);}}
+let toastQ=Promise.resolve();
+function toast(msg,small,glyph){toastQ=toastQ.then(()=>new Promise(res=>{const t=H('div',{class:'toast',role:'status'},`${glyph?`<span class="tm"><svg viewBox="0 0 40 40">${glyph}</svg></span>`:''}<span>${small?`<small>${small}</small>`:''}${msg}</span>`,document.body);setTimeout(()=>{t.remove();res();},2500);}));}
+const BADGES=[['first','First steps','Finish a challenge','points','--c2'],['perfect','Flawless','3 stars in a world','triangles','--c3'],['streak5','On fire','5 right in a row','angles','--c1'],['bullseye','Bullseye','Guess an angle within 5°','angles','--c4'],
+ ['tear','Corner thief','Tear off a triangle’s corners','triangles','--c5'],['artist','Mirror artist','Draw in the symmetry studio','symmetry','--c1'],['euclid','Euclid’s apprentice','Finish Euclid’s construction','constructions','--c3'],['ladder','Safe climber','Set a ladder at the safe angle','pythagoras','--c4'],
+ ['triple','Triple threat','Find a whole-number triple','pythagoras','--c2'],['koch','Infinity tamer','Grow the snowflake to step 6','fractals','--c5'],['half','Halfway hero','Stars in 8 worlds','polygons','--c4'],['boss','Boss slayer','Score 10+ in the boss','congruence','--c1'],
+ ['protractor','Steady hand','3 exact protractor readings','protractor','--c5'],['netfold','Box builder','Fold a net into 3D','solids','--c3'],['navigator','Navigator','Find 5 treasures','coords','--c2'],['transformer','Shape shifter','Slide, flip and spin a shape','transform','--c4']];
+function award(id){if(S.badges[id])return;const b=BADGES.find(x=>x[0]===id);if(!b)return;S.badges[id]=1;save();toast(`<b>${b[1]}</b>`,'Badge unlocked',GLYPH[b[3]]);sfx('win');addXP(15);}
+$('#snd').onclick=()=>{S.sound=!S.sound;save();updateHUD();if(S.sound)sfx('ok');};
+let AC=null,BUS=null;
+function audio(){if(AC)return AC;AC=new(window.AudioContext||window.webkitAudioContext)();BUS=AC.createGain();BUS.gain.value=.9;const dl=AC.createDelay();dl.delayTime.value=.13;const fb=AC.createGain();fb.gain.value=.22;const wet=AC.createGain();wet.gain.value=.35;BUS.connect(AC.destination);BUS.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(AC.destination);return AC;}
+function tone(freqs,dur=0.09,type='triangle',vol=.11){if(!S.sound)return;try{const ac=audio();freqs.forEach((f,i)=>{const t=ac.currentTime+i*dur;[[type,1,vol],['sine',2,vol*.35]].forEach(([ty,mul,v])=>{const o=ac.createOscillator(),g=ac.createGain();o.type=ty;o.frequency.setValueAtTime(f*mul,t);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+dur*2.2);o.connect(g).connect(BUS);o.start(t);o.stop(t+dur*2.4);});});}catch(e){}}
+function sfx(k){({click:()=>tone([1046],.03,'sine',.05),pop:()=>tone([1568],.025,'sine',.04),ok:()=>tone([784,1175,1568],.07),bad:()=>tone([233,196],.12,'square',.04),win:()=>tone([523,659,784,1047,1319],.08),tick:()=>tone([880],.03,'sine',.05)}[k]||(()=>{}))();}
+const fx=$('#fx'),fctx=fx.getContext('2d');let parts=[],fxOn=false;
+function sizeFx(){const d=devicePixelRatio||1;fx.width=innerWidth*d;fx.height=innerHeight*d;fctx.setTransform(d,0,0,d,0,0);}sizeFx();addEventListener('resize',sizeFx);
+function burst(x,y,n=40){if(RM)return;const cols=['--c1','--c2','--c3','--c4','--c5'].map(css);for(let i=0;i<n;i++)parts.push({x,y,vx:rnd(-7,7),vy:rnd(-12,-3),life:rnd(55,95),c:cols[i%5],s:rnd(6,11),r:rnd(0,6),vr:rnd(-.25,.25),k:i%3});if(!fxOn){fxOn=true;requestAnimationFrame(fxLoop);}}
+function fxLoop(){fctx.clearRect(0,0,innerWidth,innerHeight);parts=parts.filter(p=>p.life>0);parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.35;p.vx*=.99;p.r+=p.vr;p.life--;fctx.save();fctx.globalAlpha=Math.min(1,p.life/30);fctx.translate(p.x,p.y);fctx.rotate(p.r);fctx.fillStyle=p.c;fctx.strokeStyle='#13173A';fctx.lineWidth=1.5;fctx.beginPath();if(p.k===0){fctx.moveTo(0,-p.s);fctx.lineTo(p.s,p.s);fctx.lineTo(-p.s,p.s);fctx.closePath();}else if(p.k===1){fctx.rect(-p.s/2,-p.s/2,p.s,p.s);}else{fctx.arc(0,0,p.s/2,0,7);}fctx.fill();fctx.stroke();fctx.restore();});if(parts.length)requestAnimationFrame(fxLoop);else{fxOn=false;fctx.clearRect(0,0,innerWidth,innerHeight);}}
+
+/* ================= LABS ================= */
+// World 1
+function labPoint(root){
+  const p=panel(root,'The shrink ray','Halve the dot again and again. When does it become a point?','Lab');
+  const s=stage(p,720,240,'A dot being halved');
+  E('line',{x1:180,y1:120,x2:540,y2:120,class:'s-faint'},s);E('line',{x1:360,y1:14,x2:360,y2:226,class:'s-faint'},s);
+  const c=E('circle',{cx:360,cy:120,r:90,class:'zoomdot'},s);
+  const r=readout(p),ct=controls(p);let n=0;
+  const upd=()=>{const w=180/Math.pow(2,n);c.setAttribute('r',Math.max(90/Math.pow(2,n),0.7));
+    r.innerHTML=n===0?'Width <b>180 px</b>. A circle with area, not a point.':n<7?`Halved <b>${n}</b>× → <b class="mono">${fmt(w)} px</b>. Still has area.`:n<25?`Halved <b>${n}</b>× → <b class="mono">${fmt(w)} px</b>. Invisible, but not zero.`:`Halved <b>${n}</b>× → <b class="mono">${fmt(w)} px</b>. You’d need to halve <b>forever</b>. A point has no size. It’s pure location, like where the dashed lines cross.`;};
+  btn(ct,'Halve it',()=>{n++;upd();tone([500+n*25],.05,'sine');},'primary');btn(ct,'Halve ×10',()=>{n+=10;upd();sfx('ok');});btn(ct,'Reset',()=>{n=0;upd();},'ghost');upd();
+}
+function labLines(root){
+  const p=panel(root,'Laser lab','Drag A and B. Switch between segment, ray and line. Then park C exactly on the line.','Lab');
+  const W=720,Hh=340,s=stage(p,W,Hh,'Segment, ray and line builder');
+  const guideL=E('line',{class:'s-guide',opacity:0},s),glow=E('line',{class:'glow',opacity:0},s),main=E('line',{class:'s-main'},s),a1=E('path',{class:'arrowhead'},s),a2=E('path',{class:'arrowhead'},s);
+  const pen=E('g',{opacity:0},s);E('rect',{x:-86,y:-10,width:76,height:20,rx:8,fill:'var(--onc)',stroke:'var(--ink)','stroke-width':2},pen);E('rect',{x:-14,y:-6,width:10,height:12,rx:2,fill:'var(--metal)'},pen);E('rect',{x:-64,y:-12,width:12,height:6,rx:2,fill:'var(--c1)'},pen);
+  const P={A:{x:170,y:240},B:{x:390,y:150},C:{x:560,y:200}};let mode='segment',was=false;const lbl={},hs={};
+  ['A','B','C'].forEach(k=>{hs[k]=handle(s,P[k].x,P[k].y,k==='C'?'h-alt':'',(x,y)=>{P[k]={x:clamp(x,16,W-16),y:clamp(y,16,Hh-16)};draw();},'Point '+k);lbl[k]=E('text',{class:'t-name'},s);lbl[k].textContent=k;});
+  const sg=controls(p);segmented(sg,[['segment','Segment'],['ray','Ray (laser)'],['line','Line']],mode,k=>{mode=k;draw();sfx('ok');});
+  const r=readout(p);
+  function exitPt(o,u){let t=1e9;if(u.x>1e-6)t=Math.min(t,(W-6-o.x)/u.x);if(u.x<-1e-6)t=Math.min(t,(6-o.x)/u.x);if(u.y>1e-6)t=Math.min(t,(Hh-6-o.y)/u.y);if(u.y<-1e-6)t=Math.min(t,(6-o.y)/u.y);return {x:o.x+u.x*t,y:o.y+u.y*t};}
+  function head(el,tip,u){const b={x:tip.x-u.x*18,y:tip.y-u.y*18},n={x:-u.y,y:u.x};el.setAttribute('d',`M${tip.x},${tip.y}L${b.x+n.x*9},${b.y+n.y*9}L${b.x-n.x*9},${b.y-n.y*9}Z`);}
+  function draw(){const {A,B,C}=P;const dx=B.x-A.x,dy=B.y-A.y,L=Math.hypot(dx,dy)||1;const u={x:dx/L,y:dy/L},nu={x:-u.x,y:-u.y};
+    let s1=A,s2=B;a1.setAttribute('d','');a2.setAttribute('d','');
+    if(mode==='ray'){s2=exitPt(A,u);head(a2,s2,u);}if(mode==='line'){s1=exitPt(A,nu);s2=exitPt(A,u);head(a1,s1,nu);head(a2,s2,u);}
+    [main,glow].forEach(l=>{l.setAttribute('x1',s1.x);l.setAttribute('y1',s1.y);l.setAttribute('x2',s2.x);l.setAttribute('y2',s2.y);});
+    main.style.stroke=mode==='ray'?'var(--c1)':'';glow.setAttribute('opacity',mode==='ray'?1:0);a2.style.fill=mode==='ray'?'var(--c1)':'';
+    pen.setAttribute('opacity',mode==='ray'?1:0);pen.setAttribute('transform',`translate(${A.x},${A.y}) rotate(${Math.atan2(dy,dx)*180/Math.PI})`);
+    ['A','B','C'].forEach(k=>{hs[k].set(P[k].x,P[k].y);lbl[k].setAttribute('x',P[k].x-12);lbl[k].setAttribute('y',P[k].y-24);});
+    const e1=exitPt(A,nu),e2=exitPt(A,u);guideL.setAttribute('x1',e1.x);guideL.setAttribute('y1',e1.y);guideL.setAttribute('x2',e2.x);guideL.setAttribute('y2',e2.y);
+    const dist=Math.abs(dx*(C.y-A.y)-dy*(C.x-A.x))/L,col=dist<6;guideL.setAttribute('opacity',dist<45?1:0);
+    const info={segment:['Segment','<span class="ol">AB</span>','Two ends, fixed length. Like your phone’s edge.'],ray:['Ray','<span class="arr" data-a="→">AB</span>','One start, no end. Like a laser beam.'],line:['Line','<span class="arr" data-a="↔">AB</span>','No ends at all. Only one fits through A and B.']}[mode];
+    r.innerHTML=`<span class="pill">${info[0]}</span> ${info[1]} · ${info[2]}<br>C: ${col?'<b class="good">exactly on the line. A, B, C are collinear!</b>':dist<45?`so close, <b class="mono">${dist.toFixed(0)} px</b> away…`:'not on the line yet.'}`;
+    if(col&&!was){const [x,y]=centerOf(hs.C);burst(x,y,30);sfx('ok');}was=col;}
+  draw();
+}
+// World 2
+function labAngle(root,pid){
+  const p=panel(root,'The angle machine','Swing the pink handle round the protractor. Then play the guessing game.','Lab + game');
+  const W=720,Hh=390,cx=380,cy=205,R=150,s=stage(p,W,Hh,'Angle measurer');
+  const prot=E('g',{},s);E('circle',{cx,cy,r:R+30,fill:'var(--card)',stroke:'var(--line)','stroke-width':2},prot);
+  for(let a=0;a<360;a+=5){const big=a%30===0;const [x1,y1]=polar(cx,cy,R+30,a),[x2,y2]=polar(cx,cy,R+30-(big?14:a%10===0?9:5),a);E('line',{x1,y1,x2,y2,class:'tick-p'},prot);if(big){const [tx,ty]=polar(cx,cy,R+2,a);const t=E('text',{x:tx,y:ty,class:'t-prot','text-anchor':'middle','dominant-baseline':'middle'},prot);t.textContent=a;}}
+  const fan=E('path',{'fill-opacity':.32},s),sq=E('path',{class:'s-line thin'},s);
+  E('line',{x1:cx,y1:cy,x2:cx+R+24,y2:cy,class:'s-arm'},s);const arm=E('line',{x1:cx,y1:cy,class:'s-arm'},s);E('circle',{cx,cy,r:7,class:'f-ink'},s);
+  const big=E('text',{x:22,y:58,class:'t-big'},s),typ=E('text',{x:22,y:90,class:'t-type'},s);
+  let th=50,full=false,guessing=false,target=0;
+  const h=handle(s,0,0,'',(x,y)=>{if(guessing)return;let a=(Math.atan2(-(y-cy),x-cx)*180/Math.PI+360)%360;for(const sn of [0,90,180,270])if(Math.abs(a-sn)<2.5)a=sn;const na=Math.round(a);if(na%15===0&&na!==th)sfx('tick');th=na;full=false;draw();},'Angle handle');
+  const r=readout(p);
+  const TYPES=d=>d===0?['Zero angle','--muted','No turn at all.']:d<90?['Acute','--c4','Under 90°. Sharp, like a pizza tip.']:d===90?['Right angle','--c2','Exactly 90°. A book corner.']:d<180?['Obtuse','--c3','90° to 180°. A laptop leaning back.']:d===180?['Straight angle','--c5','180°. A skater’s half turn.']:d<360?['Reflex','--c1','More than half a turn.']:['Full turn','--c1','360°. A skater’s “360”.'];
+  function draw(){const d=full?360:th;const [x,y]=polar(cx,cy,R,d);arm.setAttribute('x2',x);arm.setAttribute('y2',y);h.set(x,y);h.style.display=guessing?'none':'';
+    const t=TYPES(d);fan.setAttribute('d',d===0?'':wedge(cx,cy,64,0,d>=360?359.9:d));fan.style.fill=`var(${t[1]})`;
+    sq.setAttribute('d',d===90?`M${cx+24},${cy}V${cy-24}H${cx}`:'');prot.setAttribute('opacity',guessing?0:1);
+    big.textContent=guessing?'? ? ?':d+'°';typ.textContent=guessing?'Guess it!':t[0];typ.style.fill=guessing?'var(--muted)':`var(${t[1]})`;
+    if(!guessing)r.innerHTML=`<span class="pill c" style="--pc:var(${t[1]})">${t[0]}</span> ${t[2]}`;}
+  const ch=H('div',{class:'chips'},null,p);
+  [['Pizza slice',45],['Clock at 3:00',90],['Laptop lid',110],['Skater’s 180',180],['Outside of 8:00',240],['Full 360',360]].forEach(([n,v])=>{const b=H('button',{class:'chip-btn',type:'button'},`${n} <b>${v}°</b>`,ch);b.onclick=()=>{if(guessing)return;const from=full?360:th;tween(700,t=>{const v2=Math.round(lerp(from,v,t));if(v2>=360){full=true;th=0;}else{full=false;th=v2;}draw();},()=>sfx('ok'));};});
+  const g=H('div',{class:'controls'},null,p);const gbtn=btn(g,'Play: guess the angle',start,'primary');
+  const gwrap=H('div',{class:'controls',hidden:''},null,p);const gs=slider(gwrap,pid+'-guess','My guess',0,360,90,1,()=>{});const lock=btn(gwrap,'Lock it in',check,'primary');
+  function start(){guessing=true;target=Math.round(rnd(15,345));if([90,180,270].some(v=>Math.abs(v-target)<6))target+=11;th=target;full=false;draw();gwrap.hidden=false;gbtn.hidden=true;lock.disabled=false;r.innerHTML='How big? Slide your guess and lock it in. Within 5° = <b>10 XP</b>, within 15° = <b>5 XP</b>.';}
+  function check(e){const gv=+gs.input.value,diff=Math.abs(gv-target);guessing=false;draw();lock.disabled=true;const xp=diff<=5?10:diff<=15?5:0;
+    r.innerHTML=`It was <b class="mono">${target}°</b>. You said <b class="mono">${gv}°</b>, off by <b class="mono">${diff}°</b>. ${xp===10?'<b class="good">Bullseye!</b>':xp?'<b class="good">Close!</b>':'Tip: picture a 90° corner and compare.'}`;
+    if(xp){burst(e.clientX,e.clientY);sfx('ok');addXP(xp,e.clientX,e.clientY);if(xp===10)award('bullseye');}else sfx('bad');gbtn.hidden=false;gbtn.textContent='Play again';gwrap.hidden=true;}
+  draw();
+}
+// World 3
+function labCross(root){
+  const p=panel(root,'Scissor lab','Drag the blade tips to open and close the scissors. Watch which angles stay matched.','Lab');
+  const W=720,Hh=400,cx=360,cy=200,R=170,s=stage(p,W,Hh,'Scissors made of two crossing lines');
+  const wedges=[0,1,2,3].map(()=>E('path',{'fill-opacity':.28},s));
+  const parts=[0,1].map(i=>({ring:E('ellipse',{class:'ring'},s),stem:E('line',{class:'ring'},s),blade:E('polygon',{class:'blade'},s)}));
+  parts[0].ring.style.stroke=parts[0].stem.style.stroke='var(--c1)';parts[1].ring.style.stroke=parts[1].stem.style.stroke='var(--c2)';
+  E('circle',{cx,cy,r:9,fill:'var(--metal)',stroke:'var(--ink)','stroke-width':3},s);
+  const labs=[0,1,2,3].map(()=>E('text',{class:'t-ang','text-anchor':'middle','dominant-baseline':'middle'},s));
+  let t1=20,t2=110;const ok=(a,b)=>{const d=((a-b)%180+180)%180;return d>=12&&d<=168;};
+  const ang=(x,y)=>Math.round((Math.atan2(-(y-cy),x-cx)*180/Math.PI+360)%360);
+  const h1=handle(s,0,0,'',(x,y)=>{const a=ang(x,y);if(ok(a,t2)){t1=a;draw();}},'Blade 1 tip');
+  const h2=handle(s,0,0,'h-alt',(x,y)=>{const a=ang(x,y);if(ok(a,t1)){t2=a;draw();}},'Blade 2 tip');
+  const r=readout(p);
+  function piece(pt,t){const [dx,dy]=[Math.cos(t*Math.PI/180),-Math.sin(t*Math.PI/180)],nx=-dy,ny=dx;const P=(a,b)=>`${(cx+dx*a+nx*b).toFixed(1)},${(cy+dy*a+ny*b).toFixed(1)}`;
+    pt.blade.setAttribute('points',[P(-6,-4),P(-6,9),P(R*0.55,9),P(R,0),P(R*0.6,-3)].join(' '));
+    const rc=[cx-dx*118,cy-dy*118];pt.ring.setAttribute('cx',rc[0]);pt.ring.setAttribute('cy',rc[1]);pt.ring.setAttribute('rx',30);pt.ring.setAttribute('ry',19);pt.ring.setAttribute('transform',`rotate(${-t} ${rc[0]} ${rc[1]})`);
+    pt.stem.setAttribute('x1',cx);pt.stem.setAttribute('y1',cy);pt.stem.setAttribute('x2',cx-dx*88);pt.stem.setAttribute('y2',cy-dy*88);}
+  function draw(){piece(parts[0],t1);piece(parts[1],t2);h1.set(...polar(cx,cy,R,t1));h2.set(...polar(cx,cy,R,t2));
+    const rays=[t1,t1+180,t2,t2+180].map(a=>((a%360)+360)%360).sort((a,b)=>a-b);const spans=rays.map((a,i)=>[a,i<3?rays[i+1]:rays[0]+360]);
+    const v0=Math.round(spans[0][1]-spans[0][0]),v1=180-v0;const L='abcd';
+    spans.forEach(([a0,a1],i)=>{wedges[i].setAttribute('d',wedge(cx,cy,62,a0,a1));const col=i%2?'var(--c4)':'var(--c5)';wedges[i].style.fill=col;const [x,y]=polar(cx,cy,92,(a0+a1)/2);labs[i].setAttribute('x',x);labs[i].setAttribute('y',y);labs[i].textContent=`${L[i]} ${i%2?v1:v0}°`;labs[i].style.fill=col;});
+    r.innerHTML=`<span class="sw" style="--pc:var(--c5)"></span><b>a = c = ${v0}°</b> vertically opposite: always equal<br><span class="sw" style="--pc:var(--c4)"></span><b>b = d = ${v1}°</b><br><span class="mono">a + b = 180°</span> straight line · <span class="mono">a + b + c + d = 360°</span> around a point`;}
+  draw();
+}
+// World 4
+function labTriangle(root){
+  const p=panel(root,'Triangle lab','Drag the corners into any triangle. Then tear the corners off and line them up.','Lab');
+  const W=720,Hh=430,s=stage(p,W,Hh,'Draggable triangle');gridSVG(s,W,Hh,40);
+  const fill=E('polygon',{class:'tri-fill'},s),alt=E('line',{class:'s-dash'},s),ext=E('line',{class:'s-dash'},s),altL=E('text',{class:'t-side'},s);
+  const tri=E('polygon',{class:'tri'},s);const sideL=[0,1,2].map(()=>E('text',{class:'t-side','text-anchor':'middle','dominant-baseline':'middle'},s));
+  const lineT=E('line',{class:'s-line',x1:250,y1:405,x2:470,y2:405,opacity:0},s);const lineL=E('text',{class:'t-ang',x:482,y:400,opacity:0},s);lineL.textContent='= 180°, a straight line!';
+  const COLS=['--c1','--c2','--c4'];const wg=[0,1,2].map(i=>{const w=E('path',{'fill-opacity':.6,stroke:'var(--ink)','stroke-width':1.5},s);w.style.fill=`var(${COLS[i]})`;return w;});
+  const angL=[0,1,2].map(i=>{const t=E('text',{class:'t-ang','text-anchor':'middle','dominant-baseline':'middle'},s);t.style.fill=`var(${COLS[i]})`;return t;});
+  const names=['A','B','C'].map(n=>{const t=E('text',{class:'t-name','text-anchor':'middle','dominant-baseline':'middle'},s);t.textContent=n;return t;});
+  let V=[{x:150,y:330},{x:560,y:340},{x:340,y:90}],torn=0;
+  const hs=V.map((v,i)=>handle(s,v.x,v.y,'',(x,y)=>{V[i]={x:clamp(x,20,W-20),y:clamp(y,20,Hh-60)};torn=0;tb.textContent='Tear off the corners';draw();},'Corner '+'ABC'[i]));
+  const r=readout(p),ct=controls(p);
+  const tb=btn(ct,'Tear off the corners',()=>{const from=torn,to=torn>0.5?0:1;tb.disabled=true;tween(1400,t=>{torn=lerp(from,to,t);draw();},()=>{tb.disabled=false;tb.textContent=to?'Put them back':'Tear off the corners';if(to){const [x,y]=centerOf(lineT);burst(x,y,50);sfx('win');award('tear');}});},'primary');
+  const shapes={Equilateral:[{x:200,y:330},{x:520,y:330},{x:360,y:52.9}],'Right-angled':[{x:180,y:340},{x:540,y:340},{x:180,y:80}],Isosceles:[{x:150,y:330},{x:570,y:330},{x:360,y:220}],Scalene:[{x:120,y:300},{x:600,y:350},{x:250,y:70}]};
+  Object.entries(shapes).forEach(([n,T])=>btn(ct,n,()=>{const F=V.map(v=>({...v}));torn=0;tb.textContent='Tear off the corners';tween(600,t=>{V=F.map((f,i)=>({x:lerp(f.x,T[i].x,t),y:lerp(f.y,T[i].y,t)}));draw();});}));
+  function draw(){const pts=V.map(v=>`${v.x},${v.y}`).join(' ');fill.setAttribute('points',pts);tri.setAttribute('points',pts);V.forEach((v,i)=>hs[i].set(v.x,v.y));
+    const sp=V.map((v,i)=>angSpan(v,V[(i+1)%3],V[(i+2)%3]));const raw=sp.map(([a,b])=>b-a);const dA=Math.round(raw[0]),dB=Math.round(raw[1]),dC=180-dA-dB;const ds=[dA,dB,dC];
+    const cen={x:(V[0].x+V[1].x+V[2].x)/3,y:(V[0].y+V[1].y+V[2].y)/3};let acc=0;
+    sp.forEach(([a0,a1],i)=>{const span=a1-a0,tg=acc;acc+=span;let d=tg-a0;d=((d+180)%360+360)%360-180;
+      const x=lerp(V[i].x,360,torn),y=lerp(V[i].y,405,torn)-Math.sin(torn*Math.PI)*60;wg[i].setAttribute('d',wedge(0,0,32,a0,a1));wg[i].setAttribute('transform',`translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${(-d*torn).toFixed(2)})`);
+      const [lx,ly]=polar(V[i].x,V[i].y,56,(a0+a1)/2);angL[i].setAttribute('x',lx);angL[i].setAttribute('y',ly);angL[i].textContent=ds[i]+'°';angL[i].setAttribute('opacity',1-torn);
+      const [nx,ny]=polar(V[i].x,V[i].y,26,(a0+a1)/2+180);names[i].setAttribute('x',nx);names[i].setAttribute('y',ny);});
+    lineT.setAttribute('opacity',torn);lineL.setAttribute('opacity',torn>.95?1:0);
+    const len=[0,1,2].map(i=>Math.hypot(V[(i+1)%3].x-V[i].x,V[(i+1)%3].y-V[i].y)/40);
+    [0,1,2].forEach(i=>{const a=V[i],b=V[(i+1)%3];const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;const dx=mx-cen.x,dy=my-cen.y,dl=Math.hypot(dx,dy)||1;sideL[i].setAttribute('x',mx+dx/dl*18);sideL[i].setAttribute('y',my+dy/dl*18);sideL[i].textContent=len[i].toFixed(1);});
+    const [A,B,C]=V;const bx=B.x-A.x,by=B.y-A.y,bb=bx*bx+by*by;const t=((C.x-A.x)*bx+(C.y-A.y)*by)/bb;const F={x:A.x+t*bx,y:A.y+t*by};
+    alt.setAttribute('x1',C.x);alt.setAttribute('y1',C.y);alt.setAttribute('x2',F.x);alt.setAttribute('y2',F.y);const nr=t<0?A:t>1?B:F;ext.setAttribute('x1',F.x);ext.setAttribute('y1',F.y);ext.setAttribute('x2',nr.x);ext.setAttribute('y2',nr.y);
+    altL.setAttribute('x',(C.x+F.x)/2+8);altL.setAttribute('y',(C.y+F.y)/2);altL.textContent='h';
+    const h=Math.hypot(C.x-F.x,C.y-F.y)/40,base=len[0];const mx=Math.max(...len),eq=mx-Math.min(...len)<0.035*mx,iso=[0,1,2].some(i=>Math.abs(len[i]-len[(i+1)%3])<0.035*mx);
+    const st=eq?'Equilateral':iso?'Isosceles':'Scalene';const bg=Math.max(...raw);const at=Math.abs(bg-90)<1.5?'Right-angled':bg>90?'Obtuse':'Acute';
+    r.innerHTML=`<span class="pill">${st}</span><span class="pill">${at}</span><br><span class="mono"><b style="color:var(--c1)">${dA}°</b> + <b style="color:var(--c2)">${dB}°</b> + <b style="color:var(--c4)">${dC}°</b> = <b>180°</b></span> · Area = ½ × ${base.toFixed(1)} × ${h.toFixed(1)} = <b class="mono">${(base*h/2).toFixed(1)}</b> units²`;}
+  draw();
+}
+// World 5
+function labPolygon(root,pid){
+  const p=panel(root,'Polygon factory','Add sides. Some numbers turn into things you’ve seen. Dashed lines cut each shape into triangles.','Lab');
+  const s=stage(p,720,360,'Regular polygon');
+  const defs=E('defs',{},s);defs.innerHTML=`<radialGradient id="${pid}-gold" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#FFE9A3"/><stop offset=".6" stop-color="#E7B53C"/><stop offset="1" stop-color="#B9861C"/></radialGradient><radialGradient id="${pid}-silver" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".6" stop-color="#C9CFDB"/><stop offset="1" stop-color="#8E97AA"/></radialGradient>`;
+  const bg=E('g',{},s),tg=E('g',{},s),under=E('polygon',{},s),poly=E('polygon',{class:'poly'},s),dg=E('g',{},s),label=E('text',{'text-anchor':'middle','dominant-baseline':'middle'},s);
+  const nameT=E('text',{x:24,y:58,class:'t-big'},s),subT=E('text',{x:24,y:88,class:'t-small'},s);
+  const NAMES={3:'Triangle',4:'Square',5:'Pentagon',6:'Hexagon',7:'Heptagon',8:'Octagon',9:'Nonagon',10:'Decagon',11:'Hendecagon',12:'Dodecagon'};
+  const LIFE={3:'Warning road signs',4:'Chessboards and floor tiles',5:'The Pentagon building in the USA',6:'Honeycomb, nuts and bolts',7:'UK 20p and 50p coins',8:'STOP signs everywhere',9:'Rare. Spot one and you win the day',10:'Some coins and floor tiles',11:'Canada’s “loonie” dollar coin',12:'The UK £1 coin since 2017'};
+  const r=readout(p),ct=controls(p);
+  function draw(n){const cx=480,cy=190,R=140,a0=270-180/n;const P=[];for(let k=0;k<n;k++)P.push(polar(cx,cy,R,a0+k*360/n));const pts=P.map(q=>q.map(v=>v.toFixed(1)).join(',')).join(' ');
+    poly.setAttribute('points',pts);under.setAttribute('points',pts);tg.innerHTML='';dg.innerHTML='';bg.innerHTML='';label.textContent='';poly.removeAttribute('style');under.setAttribute('style','display:none');label.removeAttribute('style');
+    const skin={3:'warn',6:'honey',7:'silver',8:'stop',12:'gold'}[n];
+    if(skin==='stop'){under.setAttribute('style','display:block;fill:none;stroke:#13173A;stroke-width:16;stroke-linejoin:round');poly.setAttribute('style','fill:#D7263D;fill-opacity:1;stroke:#fff;stroke-width:7');label.textContent='STOP';label.setAttribute('style','font:800 64px var(--ff-display);fill:#fff;letter-spacing:.02em');}
+    if(skin==='warn'){poly.setAttribute('style','fill:#fff;fill-opacity:1;stroke:#D7263D;stroke-width:18;stroke-linejoin:round');under.setAttribute('style','display:block;fill:none;stroke:#13173A;stroke-width:24;stroke-linejoin:round');label.textContent='!';label.setAttribute('style','font:800 90px var(--ff-display);fill:#13173A');}
+    if(skin==='gold'||skin==='silver'){poly.setAttribute('style',`fill:url(#${pid}-${skin});fill-opacity:1;stroke:${skin==='gold'?'#8F6510':'#6B7385'};stroke-width:5`);label.textContent=skin==='gold'?'£1':'50';label.setAttribute('style',`font:800 70px var(--ff-display);fill:${skin==='gold'?'#7A5208':'#4D5466'};opacity:.8`);}
+    if(skin==='honey'){poly.setAttribute('style','fill:#FFB000;fill-opacity:.9;stroke:#9A5A00;stroke-width:5');for(let k=0;k<6;k++){const [hx,hy]=polar(cx,cy,R*Math.sqrt(3),30+k*60);const Q=[];for(let j=0;j<6;j++)Q.push(polar(hx,hy,R,a0+j*60));E('polygon',{points:Q.map(q=>q.join(',')).join(' '),fill:'#FFB000','fill-opacity':.28,stroke:'#C98A00','stroke-width':4},bg);}}
+    label.setAttribute('x',cx);label.setAttribute('y',cy+4);
+    for(let k=1;k<n-1;k++){if(!skin)E('polygon',{points:[P[0],P[k],P[k+1]].map(q=>q.join(',')).join(' '),class:'ptri'+(k%2)},tg);if(k>1){const l=E('line',{x1:P[0][0],y1:P[0][1],x2:P[k][0],y2:P[k][1],class:'s-dash'},dg);if(skin)l.setAttribute('style','stroke:#13173A;opacity:.45');}}
+    nameT.textContent=NAMES[n];subT.textContent=`${n} sides · ${n-2} triangle${n>3?'s':''} inside`;
+    r.innerHTML=`Angle total = (${n} − 2) × 180° = <b class="mono">${(n-2)*180}°</b> · each angle <b class="mono">${+((n-2)*180/n).toFixed(1)}°</b><br><span class="life">${LIFE[n]}</span>`;}
+  slider(ct,pid+'-n','Sides',3,12,8,1,v=>{draw(v);tone([200+v*60],.05,'sine');if([3,6,7,8,12].includes(v))sfx('ok');});draw(8);
+}
+function labQuad(root,pid){
+  const p=panel(root,'Quadrilateral shape-shifter','Two sliders, one shape. Push it into a rectangle, a rhombus, then a square.','Lab');
+  const s=stage(p,720,320,'Morphing quadrilateral');const q=E('polygon',{class:'poly alt'},s);const marks=E('g',{},s);const nameT=E('text',{x:24,y:58,class:'t-big'},s);
+  const fam=H('div',{class:'chips'},null,p);const FAM=['Parallelogram','Rectangle','Rhombus','Square'];const chips=FAM.map(f=>H('span',{class:'chip-btn'},f,fam));
+  const r=readout(p),ct=controls(p);let phi=65,h=140,lastName='';const w=200;
+  function tick(a,b,n){const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2,dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L,nx=-uy,ny=ux;for(let i=0;i<n;i++){const o=(i-(n-1)/2)*7;E('line',{x1:mx+ux*o-nx*8,y1:my+uy*o-ny*8,x2:mx+ux*o+nx*8,y2:my+uy*o+ny*8,class:'s-line thin'},marks);}}
+  function draw(){const A=[300,260],B=[300+w,260],dv=[h*Math.cos(phi*Math.PI/180),-h*Math.sin(phi*Math.PI/180)];const D=[A[0]+dv[0],A[1]+dv[1]],C=[B[0]+dv[0],B[1]+dv[1]];
+    q.setAttribute('points',[A,B,C,D].map(z=>z.join(',')).join(' '));marks.innerHTML='';const right=phi===90,eq=h===w;const name=right&&eq?'Square':right?'Rectangle':eq?'Rhombus':'Parallelogram';nameT.textContent=name;
+    tick(A,B,1);tick(D,C,1);tick(B,C,eq?1:2);tick(A,D,eq?1:2);
+    if(right)[A,B,C,D].forEach((z,i)=>{const sx=i===0||i===3?1:-1,sy=i<2?-1:1;E('path',{d:`M${z[0]+sx*16},${z[1]}V${z[1]+sy*16}H${z[0]}`,class:'s-line thin'},marks);});
+    chips.forEach((c,i)=>{const on=i===0||(i===1&&right)||(i===2&&eq)||(i===3&&right&&eq);c.style.background=on?'var(--ink)':'';c.style.color=on?'var(--paper)':'';});
+    if(name!==lastName&&lastName&&name!=='Parallelogram')sfx('ok');lastName=name;const ht=h*Math.sin(phi*Math.PI/180)/40;
+    const props={Parallelogram:'Opposite sides parallel and equal.',Rectangle:'Plus four right angles.',Rhombus:'Plus four equal sides: a diamond.',Square:'Both at once: right angles and equal sides.'}[name];
+    r.innerHTML=`<span class="pill">${name}</span> ${props} Area = base × height = ${(w/40).toFixed(1)} × ${ht.toFixed(2)} = <b class="mono">${(w/40*ht).toFixed(2)}</b> units²`;}
+  slider(ct,pid+'-phi','Corner angle',45,135,phi,1,v=>{phi=v;draw();});slider(ct,pid+'-h','Slanted side',80,200,h,4,v=>{h=v;draw();});draw();
+}
+// World 6
+function labCircle(root,pid){
+  const p=panel(root,'Bike wheel roll-out','Roll the wheel one full turn. Its pink paint mark leaves a trail exactly one circumference long.','Lab');
+  const W=720,Hh=310,base=240,x0=50,sc=20,s=stage(p,W,Hh,'Rolling bike wheel');
+  E('rect',{x:0,y:base,width:W,height:Hh-base,fill:'var(--soft)'},s);E('line',{x1:0,y1:base,x2:W,y2:base,class:'s-line'},s);
+  const tk=E('g',{},s),trail=E('line',{class:'trail',x1:x0,y1:base,x2:x0,y2:base},s),wh=E('g',{},s);
+  let d=5,th=0,busy=false;const r=readout(p),ct=controls(p);const TC=['--c2','--c4','--c5'];let dot;
+  function layout(){tk.innerHTML='';wh.innerHTML='';const D=d*sc,R=D/2,end=x0+Math.PI*D;
+    for(let k=0;k<4;k++){const xa=x0+k*D;if(xa>=end)break;const xb=Math.min(xa+D,end);const ln=E('line',{x1:xa,y1:base+16,x2:xb,y2:base+16,class:'tick'},tk);ln.style.stroke=k<3?`var(${TC[k]})`:'var(--c1)';const t=E('text',{x:(xa+xb)/2,y:base+42,class:'t-small','text-anchor':'middle'},tk);t.textContent=k<3?`d ${k+1}`:'+0.14';}
+    E('line',{x1:end,y1:base-8,x2:end,y2:base+28,class:'s-line thin'},tk);const t=E('text',{x:end,y:base+62,class:'t-ang','text-anchor':'middle'},tk);t.textContent='π × d';
+    for(let k=0;k<16;k++){const [x,y]=polar(0,0,R-6,k*22.5);E('line',{x1:0,y1:0,x2:x,y2:y,stroke:'var(--muted)','stroke-width':1.4},wh);}
+    E('circle',{r:R-4,fill:'none',stroke:'var(--metal)','stroke-width':4},wh);E('circle',{r:R-1,fill:'none',stroke:'var(--ink)','stroke-width':7},wh);
+    E('line',{x1:-R+6,y1:0,x2:R-6,y2:0,stroke:'var(--c2)','stroke-width':3,'stroke-dasharray':'5 5'},wh);E('circle',{r:7,fill:'var(--ink)'},wh);dot=E('circle',{cx:0,cy:R-1,r:7,class:'paint'},wh);}
+  function pose(){const D=d*sc,R=D/2,cx=x0+th*R;wh.setAttribute('transform',`translate(${cx.toFixed(1)},${(base-R).toFixed(1)}) rotate(${(th*180/Math.PI).toFixed(1)})`);trail.setAttribute('x2',cx);}
+  function text(){const rr=d/2;r.innerHTML=`Diameter <b class="mono">${d} cm</b> → circumference = π × ${d} = <b class="mono">${(Math.PI*d).toFixed(2)} cm</b>. Just over <b>3 diameters</b>, every time: π = 3.14159…<br>Area = π × ${rr}² = <b class="mono">${(Math.PI*rr*rr).toFixed(2)} cm²</b> · <span class="life">a 66 cm bike wheel rolls about 2.07 m per turn</span>`;}
+  btn(ct,'Roll one turn',()=>{if(busy)return;busy=true;th=0;sfx('click');tween(3200,t=>{th=t*2*Math.PI;pose();},()=>{busy=false;const [x,y]=centerOf(dot);burst(x,y,40);sfx('win');},true);},'primary');
+  slider(ct,pid+'-d','Diameter (cm)',2,6.5,d,0.5,v=>{if(busy)return;d=v;th=2*Math.PI;layout();pose();text();});
+  th=2*Math.PI;layout();pose();text();
+}
+// World 7
+function labParallel(root){
+  const p=panel(root,'Level crossing','Drag the handle to tilt the road. Pick a rule to light up matching angles.','Lab');
+  const W=720,Hh=340,cx=360,cy=170,yA=100,yB=240,s=stage(p,W,Hh,'Railway crossed by a road');
+  for(let x=24;x<W;x+=34)E('rect',{x,y:yA-14,width:13,height:yB-yA+28,rx:2,class:'sleeper'},s);
+  const road=E('line',{class:'road'},s),rl=E('line',{class:'roadline'},s);
+  const car=E('g',{},s);E('rect',{x:-20,y:-11,width:40,height:22,rx:7,fill:'var(--c3)',stroke:'#13173A','stroke-width':2.5},car);E('rect',{x:2,y:-8,width:10,height:16,rx:3,fill:'#9FD3FF',stroke:'#13173A','stroke-width':1.5},car);
+  [yA,yB].forEach(y=>{E('line',{x1:0,y1:y,x2:W,y2:y,class:'s-rail'},s);E('path',{d:`M640,${y-9}L652,${y}L640,${y+9}`,class:'s-line thin'},s);E('path',{d:`M652,${y-9}L664,${y}L652,${y+9}`,class:'s-line thin'},s);});
+  const wg=Array.from({length:8},()=>E('path',{'fill-opacity':.55,stroke:'var(--ink)','stroke-width':1},s));
+  const lb=Array.from({length:8},()=>E('text',{class:'t-ang','text-anchor':'middle','dominant-baseline':'middle'},s));
+  let phi=62,mode='corr';
+  const h=handle(s,0,0,'',(x,y)=>{phi=Math.round(clamp(Math.atan2(-(y-cy),x-cx)*180/Math.PI,28,152));if(y>cy)phi=x>cx?28:152;draw();},'Road angle');
+  const ct=controls(p);segmented(ct,[['corr','Corresponding F'],['alt','Alternate Z'],['co','Co-interior C'],['vert','Opposite X']],mode,k=>{mode=k;draw();sfx('ok');});
+  const r=readout(p);
+  const PAIRS={corr:[[1,5],[2,6],[3,7],[4,8]],alt:[[3,6],[4,5]],co:[[3,5],[4,6]],vert:[[1,4],[2,3],[5,8],[6,7]]};const PC=['--c1','--c2','--c5','--c4'];
+  function draw(){const tn=Math.tan(phi*Math.PI/180);const xs=[cx+(cy-yA)/tn,cx-(yB-cy)/tn];
+    const [ex1,ey1]=polar(cx,cy,230,phi),[ex2,ey2]=polar(cx,cy,230,phi+180);[road,rl].forEach(l=>{l.setAttribute('x1',ex1);l.setAttribute('y1',ey1);l.setAttribute('x2',ex2);l.setAttribute('y2',ey2);});h.set(...polar(cx,cy,150,phi));
+    const val={};const secs=[[phi,180],[0,phi],[180,180+phi],[180+phi,360]];
+    [0,1].forEach(j=>secs.forEach(([a0,a1],k)=>{const id=j*4+k+1;val[id]=Math.round(a1-a0);wg[id-1].setAttribute('d',wedge(xs[j],j?yB:yA,30,a0,a1));const [lx,ly]=polar(xs[j],j?yB:yA,48,(a0+a1)/2);lb[id-1].setAttribute('x',lx);lb[id-1].setAttribute('y',ly);lb[id-1].textContent=id;}));
+    for(let i=1;i<=8;i++){wg[i-1].style.fill='var(--card)';wg[i-1].setAttribute('fill-opacity',.35);lb[i-1].style.fill='var(--muted)';}
+    const lines=[];PAIRS[mode].forEach((pr,k)=>{pr.forEach(i=>{wg[i-1].style.fill=`var(${PC[k]})`;wg[i-1].setAttribute('fill-opacity',.8);lb[i-1].style.fill=`var(${PC[k]})`;});
+      lines.push(mode==='co'?`<span class="sw" style="--pc:var(${PC[k]})"></span>∠${pr[0]} + ∠${pr[1]} = ${val[pr[0]]}° + ${val[pr[1]]}° = <b>180°</b>`:`<span class="sw" style="--pc:var(${PC[k]})"></span>∠${pr[0]} = ∠${pr[1]} = <b>${val[pr[0]]}°</b>`);});
+    const note={corr:'Same spot at each crossing → <b>equal</b>.',alt:'Between the rails, opposite sides → <b>equal</b>.',co:'Between the rails, same side → <b>add to 180°</b>.',vert:'Across each crossing → <b>equal</b>.'}[mode];
+    r.innerHTML=`${note}<br><span class="mono">${lines.join('<br>')}</span>`;}
+  draw();const t0=performance.now();
+  function loop(now){if(!s.isConnected)return;const sp=RM?90:(((now-t0)*0.07)%460)-230;const [x,y]=polar(cx,cy,sp,phi);car.setAttribute('transform',`translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${-phi})`);if(!RM)requestAnimationFrame(loop);}requestAnimationFrame(loop);
+}
+// World 8
+function labSym(root){
+  const p=panel(root,'Symmetry studio','Draw anywhere. Every stroke gets copied by reflection or rotation.','Studio');
+  const wrap=H('div',{class:'canvas-wrap'},null,p);const cv=H('canvas',{class:'sym','aria-label':'Symmetry drawing canvas'},null,wrap);const ct=controls(p);const r=readout(p);
+  const MODES=[['m1','1 mirror',1,true,'<b>Line symmetry</b>, one axis. Like a butterfly, or the letters A, M and W.'],['m2','2 mirrors',2,true,'<b>Two axes</b>, like the letter H. Also rotational order 2.'],['r3','Spin ×3',3,false,'<b>Rotational order 3</b>, no mirrors. Like the recycling sign.'],['r4','Spin ×4',4,false,'<b>Rotational order 4</b>, like a pinwheel.'],['sf','Snowflake',6,true,'<b>6 mirrors + rotational order 6</b>, exactly like a real snowflake.'],['r8','Fan ×8',8,false,'<b>Rotational order 8</b>, like fan blades.']];
+  let mode=MODES[4],ctx,Wc=600,Hc=400,last=null,hue=330,drew=0;
+  segmented(ct,MODES.map(m=>[m[0],m[1]]),'sf',k=>{mode=MODES.find(m=>m[0]===k);clear();r.innerHTML=mode[4];});
+  btn(ct,'Clear',()=>clear(),'ghost');btn(ct,'Surprise me',()=>{clear();seed();sfx('ok');});
+  function setup(){const w=wrap.clientWidth||600,dpr=devicePixelRatio||1;Wc=w;Hc=Math.round(clamp(w*.62,300,460));cv.style.height=Hc+'px';cv.width=Wc*dpr;cv.height=Hc*dpr;ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);clear();}
+  function clear(){ctx.clearRect(0,0,Wc,Hc);ctx.save();ctx.strokeStyle=css('--line');ctx.lineWidth=1.5;ctx.setLineDash([6,7]);const cx=Wc/2,cy=Hc/2,R=Math.hypot(Wc,Hc);const n=mode[2];
+    if(mode[3]){for(let k=0;k<n;k++){const a=Math.PI/2+k*Math.PI/n;ctx.beginPath();ctx.moveTo(cx-Math.cos(a)*R,cy-Math.sin(a)*R);ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);ctx.stroke();}}
+    else{for(let k=0;k<n;k++){const a=-Math.PI/2+k*2*Math.PI/n;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);ctx.stroke();}}
+    ctx.setLineDash([]);ctx.strokeStyle=css('--muted');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx-6,cy-6);ctx.lineTo(cx+6,cy+6);ctx.moveTo(cx+6,cy-6);ctx.lineTo(cx-6,cy+6);ctx.stroke();ctx.restore();}
+  function seg(a,b){const cx=Wc/2,cy=Hc/2,n=mode[2];ctx.strokeStyle=`hsl(${hue},88%,58%)`;ctx.lineWidth=4.5;ctx.lineCap='round';
+    const T=(q,k,m)=>{let dx=q.x-cx,dy=q.y-cy;if(m)dx=-dx;const t=k*2*Math.PI/n,c=Math.cos(t),s=Math.sin(t);return [cx+dx*c-dy*s,cy+dx*s+dy*c];};
+    for(let k=0;k<n;k++)for(const m of (mode[3]?[false,true]:[false])){const A=T(a,k,m),B=T(b,k,m);ctx.beginPath();ctx.moveTo(A[0],A[1]);ctx.lineTo(B[0],B[1]);ctx.stroke();}}
+  const pt=e=>{const rc=cv.getBoundingClientRect();return {x:e.clientX-rc.left,y:e.clientY-rc.top};};
+  cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);last=pt(e);});
+  cv.addEventListener('pointermove',e=>{if(!last)return;const q=pt(e);seg(last,q);last=q;hue=(hue+1.2)%360;if(++drew===120)award('artist');});
+  ['pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,()=>last=null));
+  function seed(){const cx=Wc/2,cy=Hc/2,M=Math.min(Wc,Hc)*.46;for(let j=0;j<4;j++){const ph=rnd(0,6),f=rnd(2,5),sp=rnd(.3,1.3);let prev=null;for(let t=0;t<=1.0001;t+=.015){const rr=12+t*M,a=-Math.PI/2+t*sp+Math.sin(t*f+ph)*.25;const q={x:cx+Math.cos(a)*rr,y:cy+Math.sin(a)*rr};if(prev)seg(prev,q);prev=q;hue=(hue+.8)%360;}}}
+  let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>{if(cv.isConnected){setup();seed();}},250);});
+  requestAnimationFrame(()=>{setup();seed();r.innerHTML=mode[4];});
+}
+// World 9
+function labEquilateral(root){
+  const p=panel(root,'Euclid’s first move','The oldest construction in the most famous maths book ever. Ruler and compass only.','Step-through');
+  const s=stage(p,720,430,'Constructing an equilateral triangle');
+  const A={x:270,y:240},B={x:450,y:240},R=180,C={x:360,y:240-R*Math.sqrt(3)/2},C2={x:360,y:240+R*Math.sqrt(3)/2};
+  const r=readout(p),ct=controls(p);let i=0,auto=null;
+  const ln=(P,Q,cls,f)=>E('line',{x1:P.x,y1:P.y,x2:Q.x,y2:Q.y,pathLength:1,class:cls+(f?' drawin':'')},s);
+  const ci=(P,cls,f)=>{E('circle',{cx:P.x,cy:P.y,r:R,pathLength:1,class:cls+(f?' drawlin':'')},s);if(f&&!RM)compass(P);};
+  const pt=(P,n,dy)=>{E('circle',{cx:P.x,cy:P.y,r:7,class:'f-ink'},s);if(n){const t=E('text',{x:P.x+(n==='A'?-26:n==='B'?14:-8),y:P.y+(dy||8),class:'t-name'},s);t.textContent=n;}};
+  function compass(P){const g=E('g',{},s);const leg1=E('line',{class:'s-line',style:'stroke-width:6'},g),leg2=E('line',{class:'s-line',style:'stroke-width:6'},g),hinge=E('circle',{r:9,fill:'var(--c1)',stroke:'var(--ink)','stroke-width':3},g),tip=E('circle',{r:5,fill:'var(--c3)',stroke:'var(--ink)','stroke-width':2},g);
+    tween(1100,t=>{const [qx,qy]=polar(P.x,P.y,R,-360*t);const mx=(P.x+qx)/2,my=(P.y+qy)/2,dx=qx-P.x,dy=qy-P.y,L=Math.hypot(dx,dy);const hx=mx+(dy/L)*70,hy=my-(dx/L)*70;
+      leg1.setAttribute('x1',hx);leg1.setAttribute('y1',hy);leg1.setAttribute('x2',P.x);leg1.setAttribute('y2',P.y);leg2.setAttribute('x1',hx);leg2.setAttribute('y1',hy);leg2.setAttribute('x2',qx);leg2.setAttribute('y2',qy);hinge.setAttribute('cx',hx);hinge.setAttribute('cy',hy);tip.setAttribute('cx',qx);tip.setAttribute('cy',qy);},()=>{tween(300,t=>g.setAttribute('opacity',1-t),()=>g.remove());},true);}
+  const STEPS=[
+    ['Draw <span class="ol">AB</span> with the ruler. Any length.',f=>{ln(A,B,'s-main',f);}],
+    ['Compass point on A, pencil on B. Spin a circle round A.',f=>ci(A,'s-c1',f)],
+    ['Same opening. Point on B. Spin a circle round B.',f=>ci(B,'s-c2',f)],
+    ['The circles cross twice. Pick the top crossing: call it C.',f=>{E('circle',{cx:C2.x,cy:C2.y,r:6,class:'f-muted'},s);}],
+    ['Rule <span class="ol">AC</span> and <span class="ol">BC</span>. Triangle built.',f=>{ln(A,C,'s-main',f);ln(B,C,'s-main',f);}],
+    ['<b>Why?</b> AB and AC are both radii of circle A. So <b>AC = AB</b>.',f=>{ci(A,'s-hl1 thin');ln(A,B,'s-hl1',f);ln(A,C,'s-hl1',f);},1],
+    ['AB and BC are both radii of circle B. So <b>BC = AB</b>.',f=>{ci(B,'s-hl2 thin');ln(A,B,'s-hl2',f);ln(B,C,'s-hl2',f);},1],
+    ['All three sides equal. <b class="good">Equilateral!</b> Plot twist: Euclid never proved the circles must cross. Later mathematicians patched that gap.',()=>{E('polygon',{points:`${A.x},${A.y} ${B.x},${B.y} ${C.x},${C.y}`,class:'tri-fill'},s);ln(A,B,'s-hl2');ln(B,C,'s-hl2');ln(A,C,'s-hl2');},1]];
+  function render(){s.innerHTML='';STEPS.forEach((st,k)=>{if(k>i)return;if(st[2]&&k!==i)return;st[1](k===i);});pt(A,'A');pt(B,'B');if(i>=3)pt(C,'C',-14);
+    r.innerHTML=`<span class="pill">Step ${i+1} / ${STEPS.length}</span> ${STEPS[i][0]}`;back.disabled=i===0;next.disabled=i===STEPS.length-1;
+    if(i===STEPS.length-1){const rc=s.getBoundingClientRect();burst(rc.left+rc.width/2,rc.top+rc.height/3,60);sfx('win');award('euclid');}}
+  const back=btn(ct,'← Back',()=>{stop();i=Math.max(0,i-1);render();});const next=btn(ct,'Next step →',()=>{stop();i=Math.min(STEPS.length-1,i+1);render();},'primary');
+  const play=btn(ct,'Play all',()=>{if(auto){stop();return;}i=0;render();play.textContent='Pause';auto=setInterval(()=>{if(!s.isConnected||i>=STEPS.length-1){stop();return;}i++;render();},2400);});
+  function stop(){clearInterval(auto);auto=null;play.textContent='Play all';}
+  render();
+}
+function labInequality(root,pid){
+  const p=panel(root,'Can these sticks make a triangle?','Choose three lolly sticks. Circles swing from each end of the bottom one. Do they meet?','Lab');
+  const s=stage(p,720,350,'Triangle inequality');const r=readout(p),ct=controls(p);let a=4,b=5,c=6;const U=26,by=310;
+  const cA=E('circle',{class:'s-c1','stroke-dasharray':'6 6'},s),cB=E('circle',{class:'s-c2','stroke-dasharray':'6 6'},s),tf=E('polygon',{class:'tri-fill'},s),sA=E('line',{class:'stick'},s),sB=E('line',{class:'stick'},s),base=E('line',{class:'stick'},s);
+  const la=E('text',{class:'t-ang'},s),lb=E('text',{class:'t-ang'},s),lc=E('text',{class:'t-ang','text-anchor':'middle'},s);let was=null;
+  function draw(){const L={x:360-c*U/2,y:by},Rr={x:360+c*U/2,y:by};base.setAttribute('x1',L.x);base.setAttribute('y1',L.y);base.setAttribute('x2',Rr.x);base.setAttribute('y2',Rr.y);
+    cA.setAttribute('cx',L.x);cA.setAttribute('cy',L.y);cA.setAttribute('r',a*U);cB.setAttribute('cx',Rr.x);cB.setAttribute('cy',Rr.y);cB.setAttribute('r',b*U);lc.setAttribute('x',360);lc.setAttribute('y',by+30);lc.textContent=c;
+    const sides=[a,b,c].sort((x,y)=>x-y),sum=sides[0]+sides[1],mx=sides[2];const state=sum>mx?'ok':sum===mx?'flat':'no';
+    if(state!=='no'){const xl=(c*c+a*a-b*b)/(2*c),hh=Math.sqrt(Math.max(0,a*a-xl*xl));const T={x:L.x+xl*U,y:by-hh*U};tf.setAttribute('points',`${L.x},${L.y} ${Rr.x},${Rr.y} ${T.x},${T.y}`);
+      [[sA,L],[sB,Rr]].forEach(([l,P])=>{l.setAttribute('x1',P.x);l.setAttribute('y1',P.y);l.setAttribute('x2',T.x);l.setAttribute('y2',T.y);l.style.display='';});
+      la.setAttribute('x',(L.x+T.x)/2-28);la.setAttribute('y',(L.y+T.y)/2);la.textContent=a;lb.setAttribute('x',(Rr.x+T.x)/2+14);lb.setAttribute('y',(Rr.y+T.y)/2);lb.textContent=b;}
+    else{tf.setAttribute('points','');sA.style.display='none';sB.style.display='none';la.textContent='';lb.textContent='';}
+    r.innerHTML=state==='ok'?`<b class="good">Triangle!</b> ${sides[0]} + ${sides[1]} = ${sum}, more than ${mx}. The circles cross.`:state==='flat'?`<b>Squashed flat.</b> ${sides[0]} + ${sides[1]} = ${mx} exactly. The circles just touch on the line.`:`<b class="bad">No triangle.</b> ${sides[0]} + ${sides[1]} = ${sum}, less than ${mx}. The circles never meet. Any two sides must add up to more than the third.`;
+    if(was!==null&&state!==was)sfx(state==='ok'?'ok':'bad');was=state;}
+  const sa=slider(ct,pid+'-a','Left',1,10,a,1,v=>{a=v;draw();}),sb=slider(ct,pid+'-b','Right',1,10,b,1,v=>{b=v;draw();}),sc=slider(ct,pid+'-c','Bottom',1,10,c,1,v=>{c=v;draw();});
+  const ch=H('div',{class:'chips'},null,p);[[3,4,5],[5,5,5],[2,3,9],[3,4,7]].forEach(t=>{const bt=H('button',{class:'chip-btn',type:'button'},`Try <b>${t.join(', ')}</b>`,ch);bt.onclick=()=>{[a,b,c]=t;sa.set(a);sb.set(b);sc.set(c);draw();};});
+  draw();
+}
+// World 10
+function labRigid(root){
+  const p=panel(root,'Wobble test','Loose hinges on both frames. One shape stays put. Find out why.','Lab');
+  const s=stage(p,720,300,'Square frame versus triangle frame');const r=readout(p),ct=controls(p);
+  E('rect',{x:0,y:262,width:720,height:38,fill:'var(--soft)'},s);
+  const sq=[0,1,2,3].map(()=>E('line',{class:'bar-frame'},s)),brace=E('line',{class:'brace',opacity:0},s),sh=[0,1,2,3].map(()=>E('circle',{r:9,class:'hinge'},s));
+  const T=[{x:440,y:250},{x:640,y:250},{x:540,y:76}];[0,1,2].forEach(i=>E('line',{x1:T[i].x,y1:T[i].y,x2:T[(i+1)%3].x,y2:T[(i+1)%3].y,class:'bar-frame'},s));T.forEach(t=>E('circle',{cx:t.x,cy:t.y,r:9,class:'hinge'},s));
+  const l1=E('text',{x:190,y:288,class:'t-small','text-anchor':'middle'},s),l2=E('text',{x:540,y:288,class:'t-small','text-anchor':'middle'},s);l2.textContent='Triangle: locked solid';
+  let braced=false,th=0;const A={x:90,y:250},B={x:290,y:250},Hh=170;
+  function pose(){const D={x:A.x+Hh*Math.sin(th),y:A.y-Hh*Math.cos(th)},C={x:B.x+Hh*Math.sin(th),y:B.y-Hh*Math.cos(th)};const P=[A,B,C,D];
+    P.forEach((q,i)=>{const n=P[(i+1)%4];sq[i].setAttribute('x1',q.x);sq[i].setAttribute('y1',q.y);sq[i].setAttribute('x2',n.x);sq[i].setAttribute('y2',n.y);sh[i].setAttribute('cx',q.x);sh[i].setAttribute('cy',q.y);});
+    brace.setAttribute('x1',A.x);brace.setAttribute('y1',A.y);brace.setAttribute('x2',C.x);brace.setAttribute('y2',C.y);brace.setAttribute('opacity',braced?1:0);l1.textContent=braced?'Braced: two triangles, rigid':'Square: wobbles all over';}
+  const t0=performance.now();function loop(now){if(!s.isConnected)return;if(braced)th*=0.85;else th=RM?0.3:0.38*Math.sin((now-t0)/520);pose();requestAnimationFrame(loop);}requestAnimationFrame(loop);
+  const b=btn(ct,'Add a diagonal brace',()=>{braced=!braced;b.textContent=braced?'Remove the brace':'Add a diagonal brace';if(braced){const [x,y]=centerOf(brace);burst(x,y,30);sfx('ok');}},'primary');
+  r.innerHTML='Three fixed sides allow only <b>one</b> triangle. That’s the <b>SSS rule</b>. Four fixed sides allow endless shapes. So bridges, cranes and bike frames are made of triangles.';
+}
+function labRules(root){
+  const p=panel(root,'Congruence detective','Two triangles share the marked parts. Enough to prove they’re identical? Which rule?','Game');
+  const s=stage(p,720,300,'Triangle with marked parts');const r=readout(p),ct=controls(p),nav=controls(p);
+  const A={x:140,y:250},B={x:520,y:250},C={x:330,y:62};const V={A,B,C};
+  const SC=[{k:'SSS',sides:['AB','BC','CA'],angs:[],w:'All three sides match.'},{k:'SAS',sides:['AB','CA'],angs:['A'],w:'Two sides and the angle between them.'},{k:'ASA',sides:['AB'],angs:['A','B'],w:'Two angles and the side joining them.'},{k:'AAS',sides:['BC'],angs:['A','B'],w:'Two angles plus a side not between them. Still enough: the 180° rule fixes the third angle.'},{k:'Not enough',sides:['AB','BC'],angs:['A'],w:'That’s SSA. The angle isn’t between the sides, so two different triangles can fit.'},{k:'Not enough',sides:[],angs:['A','B','C'],w:'AAA gives the same shape but maybe a giant copy. Similar, not congruent.'}];
+  let order=shuffle(SC.map((_,i)=>i)),idx=0,score=0;const OPTS=['SSS','SAS','ASA','AAS','Not enough'];
+  function show(){const sc=SC[order[idx]];s.innerHTML='';E('polygon',{points:`${A.x},${A.y} ${B.x},${B.y} ${C.x},${C.y}`,class:'tri-fill'},s);E('polygon',{points:`${A.x},${A.y} ${B.x},${B.y} ${C.x},${C.y}`,class:'tri'},s);
+    sc.angs.forEach(n=>{const v=V[n],others=Object.keys(V).filter(k=>k!==n).map(k=>V[k]);const [a0,a1]=angSpan(v,others[0],others[1]);const w=E('path',{d:wedge(v.x,v.y,44,a0,a1),'fill-opacity':.6},s);w.style.fill='var(--c2)';const [lx,ly]=polar(v.x,v.y,66,(a0+a1)/2);const t=E('text',{x:lx,y:ly,class:'t-ang','text-anchor':'middle','dominant-baseline':'middle'},s);t.textContent=Math.round(a1-a0)+'°';t.style.fill='var(--c2)';});
+    sc.sides.forEach(n=>{const P=V[n[0]],Q=V[n[1]];E('line',{x1:P.x,y1:P.y,x2:Q.x,y2:Q.y,class:'s-hl1'},s);const mx=(P.x+Q.x)/2,my=(P.y+Q.y)/2,dx=mx-330,dy=my-187,dl=Math.hypot(dx,dy);const t=E('text',{x:mx+dx/dl*26,y:my+dy/dl*26,class:'t-ang','text-anchor':'middle','dominant-baseline':'middle'},s);t.textContent=(Math.hypot(P.x-Q.x,P.y-Q.y)/40).toFixed(1)+' cm';t.style.fill='var(--c1)';});
+    ['A','B','C'].forEach(n=>{const t=E('text',{x:V[n].x+(n==='A'?-26:n==='B'?14:-7),y:V[n].y+(n==='C'?-12:8),class:'t-name'},s);t.textContent=n;});
+    ct.innerHTML='';nav.innerHTML='';OPTS.forEach(o=>btn(ct,o,e=>answer(o,e)));r.innerHTML=`<span class="pill">Case ${idx+1} / ${SC.length}</span> Score <b class="mono">${score}</b>`;}
+  function answer(o,e){const sc=SC[order[idx]];[...ct.children].forEach(b=>{b.disabled=true;if(b.textContent===sc.k)b.classList.add('on');});
+    if(o===sc.k){score++;burst(e.clientX,e.clientY,30);sfx('ok');const key='w10r'+order[idx];if(!S.got[key]){S.got[key]=1;addXP(5,e.clientX,e.clientY);}r.innerHTML=`<b class="good">Correct: ${sc.k}.</b> ${sc.w}`;}
+    else{sfx('bad');r.innerHTML=`<b class="bad">It’s ${sc.k}.</b> ${sc.w}`;}
+    if(idx<SC.length-1)btn(nav,'Next case →',()=>{idx++;show();},'primary');else btn(nav,`${score}/${SC.length}. Play again`,()=>{order=shuffle(order);idx=0;score=0;show();},'primary');}
+  show();
+}
+// World 11
+function labPythag(root,pid){
+  const p=panel(root,'Squares on the sides','The two small squares always hold exactly as many tiles as the big one. Count them.','Lab');
+  const s=stage(p,720,420,'Pythagoras squares');const g=E('g',{},s);const r=readout(p),ct=controls(p);let a=3,b=4,wasTriple=true,first=true;
+  function draw(){g.innerHTML='';const c=Math.hypot(a,b);const sc=Math.min(640/(a+2*b),390/(2*a+b));const bw=(a+2*b)*sc,bh=(2*a+b)*sc;const ox=(720-bw)/2+b*sc,oy=(420-bh)/2+(a+b)*sc;const M=([x,y])=>[ox+x*sc,oy-y*sc];
+    const sq=(pts,cls)=>E('polygon',{points:pts.map(M).map(q=>q.join(',')).join(' '),class:cls},g);const P=[a,0],Q=[0,b];
+    sq([[0,0],[a,0],[a,-a],[0,-a]],'sq-a');sq([[0,0],[0,b],[-b,b],[-b,0]],'sq-b');sq([P,Q,[b,a+b],[a+b,a]],'sq-c');
+    const gl=(p1,p2)=>{const A=M(p1),B=M(p2);E('line',{x1:A[0],y1:A[1],x2:B[0],y2:B[1],class:'gl','stroke-opacity':.9},g);};
+    for(let i=1;i<a;i++){gl([i,0],[i,-a]);gl([0,-i],[a,-i]);}for(let i=1;i<b;i++){gl([-i,0],[-i,b]);gl([0,i],[-b,i]);}
+    const u=[(Q[0]-P[0])/c,(Q[1]-P[1])/c],v=[b/c,a/c];for(let i=1;i<c-1e-9;i++){gl([P[0]+u[0]*i,P[1]+u[1]*i],[P[0]+u[0]*i+v[0]*c,P[1]+u[1]*i+v[1]*c]);gl([P[0]+v[0]*i,P[1]+v[1]*i],[P[0]+v[0]*i+u[0]*c,P[1]+v[1]*i+u[1]*c]);}
+    sq([[0,0],P,Q],'tri');const O=M([0,0]);E('path',{d:`M${O[0]+14},${O[1]}V${O[1]-14}H${O[0]}`,class:'s-line thin'},g);
+    const lab=(pt,txt)=>{const q=M(pt);const t=E('text',{x:q[0],y:q[1],class:'t-area','text-anchor':'middle','dominant-baseline':'middle'},g);t.textContent=txt;};
+    lab([a/2,-a/2],`a² = ${a*a}`);lab([-b/2,b/2],`b² = ${b*b}`);lab([(a+b)/2,(a+b)/2],`c² = ${a*a+b*b}`);
+    const ci=Number.isInteger(c);r.innerHTML=`<span class="mono">${a}² + ${b}² = ${a*a} + ${b*b} = <b>${a*a+b*b}</b></span> → c = √${a*a+b*b} = <b class="mono">${ci?c:c.toFixed(3)}</b> ${ci?'<b class="good">Whole-number triple!</b>':''}${a===1&&b===1?' <b>That’s √2. Its digits never end.</b>':''}`;
+    if(ci&&!wasTriple&&!first){const rc=s.getBoundingClientRect();burst(rc.left+rc.width/2,rc.top+rc.height/2,60);sfx('win');if(!(a===3&&b===4)&&!(a===4&&b===3))award('triple');}wasTriple=ci;first=false;}
+  const sa=slider(ct,pid+'-a','a',1,12,a,1,v=>{a=v;draw();}),sb=slider(ct,pid+'-b','b',1,12,b,1,v=>{b=v;draw();});
+  const ch=H('div',{class:'chips'},null,p);[[3,4],[6,8],[5,12],[1,1]].forEach(t=>{const bt=H('button',{class:'chip-btn',type:'button'},`<b>${t[0]}, ${t[1]}</b>`,ch);bt.onclick=()=>{[a,b]=t;sa.set(a);sb.set(b);draw();};});
+  draw();
+}
+function labLadder(root){
+  const p=panel(root,'The ladder problem','A 5 m ladder against a wall. Drag its foot. Can you reach the window safely?','Real-life lab');
+  const W=720,Hh=400,gy=360,wx=560,sc=60,s=stage(p,W,Hh,'Ladder leaning on a wall');
+  E('rect',{x:0,y:gy,width:W,height:Hh-gy,fill:'var(--soft)'},s);E('rect',{x:wx,y:20,width:W-wx,height:gy-20,class:'wall'},s);
+  for(let y=gy-20,row=0;y>20;y-=20,row++){E('line',{x1:wx,y1:y,x2:W,y2:y,class:'brick'},s);for(let x=wx+(row%2?20:0);x<W;x+=40)E('line',{x1:x,y1:y,x2:x,y2:y+20,class:'brick'},s);}
+  E('rect',{x:wx+28,y:gy-4.9*sc,width:70,height:0.5*sc,fill:'#9FD3FF',stroke:'var(--ink)','stroke-width':3},s);E('line',{x1:wx+63,y1:gy-4.9*sc,x2:wx+63,y2:gy-4.4*sc,stroke:'var(--ink)','stroke-width':2},s);
+  E('line',{x1:0,y1:gy,x2:W,y2:gy,class:'s-line'},s);
+  const lg=E('g',{},s),fan=E('path',{'fill-opacity':.4},s),angT=E('text',{class:'t-ang'},s),dT=E('text',{class:'t-ang','text-anchor':'middle'},s),hT=E('text',{class:'t-ang','text-anchor':'end'},s),dim=E('line',{class:'s-dash'},s);
+  let d=2.4,wasSafe=false;const r=readout(p);
+  const hd=handle(s,0,0,'',(x)=>{d=clamp(Math.round((wx-x)/sc*20)/20,0.6,4.6);draw();},'Ladder foot');
+  function draw(){const h=Math.sqrt(25-d*d);const F={x:wx-d*sc,y:gy},T={x:wx,y:gy-h*sc};lg.innerHTML='';const dx=(T.x-F.x)/(5*sc),dy=(T.y-F.y)/(5*sc),nx=-dy*10,ny=dx*10;
+    for(let k=1;k<12;k++){const px=F.x+dx*k*0.42*sc,py=F.y+dy*k*0.42*sc;E('line',{x1:px-nx,y1:py-ny,x2:px+nx,y2:py+ny,stroke:'var(--wood)','stroke-width':5},lg);}
+    [1,-1].forEach(sg=>E('line',{x1:F.x+nx*sg,y1:F.y+ny*sg,x2:T.x+nx*sg,y2:T.y+ny*sg,stroke:'var(--ink)','stroke-width':6,'stroke-linecap':'round'},lg));
+    hd.set(F.x,F.y);const deg=Math.acos(d/5)*180/Math.PI;fan.setAttribute('d',wedge(F.x,F.y,42,0,deg));fan.style.fill='var(--c3)';angT.setAttribute('x',F.x+48);angT.setAttribute('y',F.y-10);angT.textContent=Math.round(deg)+'°';
+    dim.setAttribute('x1',F.x);dim.setAttribute('y1',gy+22);dim.setAttribute('x2',wx);dim.setAttribute('y2',gy+22);dT.setAttribute('x',(F.x+wx)/2);dT.setAttribute('y',gy+18);dT.textContent=d.toFixed(2)+' m';
+    hT.setAttribute('x',wx-8);hT.setAttribute('y',T.y-14);hT.textContent=h.toFixed(2)+' m';
+    const ratio=h/d,safe=ratio>=3.6&&ratio<=4.4,reach=h>=4.4;
+    r.innerHTML=`Height = √(5² − ${d.toFixed(2)}²) = √${(25-d*d).toFixed(2)} = <b class="mono">${h.toFixed(2)} m</b><br>${safe?'<b class="good">Safe angle!</b> About 1 m out for every 4 m up, the rule builders use.':ratio>4.4?'<b class="bad">Too steep.</b> It could tip backwards.':'<b class="bad">Too shallow.</b> The foot could slide out.'} ${reach?'It reaches the window.':'It doesn’t reach the window yet.'}`;
+    if(safe&&reach&&!wasSafe){burst(...centerOf(hd),40);sfx('win');award('ladder');}wasSafe=safe&&reach;}
+  draw();
+}
+function labPaper(root){
+  const p=panel(root,'The secret inside A4 paper','Fold an A-size sheet in half: same shape, smaller. Only √2 can do that.','Lab');
+  const s=stage(p,720,400,'A-series paper sizes');const r=readout(p),ct=controls(p);let k=4;
+  function draw(){s.innerHTML='';let x=125,y=34,w=470,h=w/Math.SQRT2;E('rect',{x,y,width:w,height:h,class:'paper p0'},s);const t0=E('text',{x:x+w-14,y:y+h-14,class:'t-name','text-anchor':'end'},s);t0.textContent=k===0?'A0':'';
+    for(let n=1;n<=k;n++){let keep;if(w>=h){keep={x,y,w:w/2,h};x+=w/2;w/=2;}else{keep={x,y,w,h:h/2};y+=h/2;h/=2;}E('rect',{x:keep.x,y:keep.y,width:keep.w,height:keep.h,class:'paper p'+(n%5)},s);const t=E('text',{x:keep.x+keep.w/2,y:keep.y+keep.h/2,class:'t-name','text-anchor':'middle','dominant-baseline':'middle','font-size':Math.max(11,30-n*3)},s);t.textContent='A'+n;}
+    r.innerHTML=`Long ÷ short = <b class="mono">1.41421…</b> for every size. A4 is 297 × 210 mm: 297 ÷ 210 = <b class="mono">1.414…</b> That’s √2, and its digits never end or repeat.`;}
+  btn(ct,'Fold in half',()=>{k=k>=8?0:k+1;draw();tone([400+k*60],.05,'sine');},'primary');btn(ct,'Unfold',()=>{k=0;draw();},'ghost');draw();
+}
+function labProof(root){
+  const p=panel(root,'Proof: √2 is not a fraction','Legend says Hippasus found this around 500 BC and got thrown off a boat for it. Assume the opposite, then crash.','Step-through');
+  const list=H('div',{class:'steps'},null,p);const ct=controls(p);let i=0;
+  const ST=['Suppose √2 = a/b, fully simplified. So a and b are <b>not both even</b>.','Square both sides: 2 = a² / b².','Multiply by b²: <b>a² = 2b²</b>. So a² is even.','Odd × odd is odd, so a can’t be odd. <b>a is even</b>: a = 2k.','Swap in: 4k² = 2b², so <b>b² = 2k²</b>. So <b>b is even</b> too.','Both even? We said they weren’t. <b class="bad">Contradiction!</b>','So the first assumption was false. √2 is never a fraction. It’s <b>irrational</b>.'];
+  function render(){list.innerHTML='';ST.slice(0,i+1).forEach((t,k)=>H('div',{class:'stepcard'+(k===ST.length-1?' last':'')},t,list));nb.disabled=i>=ST.length-1;if(i===ST.length-1){const rc=list.getBoundingClientRect();burst(rc.left+rc.width/2,rc.bottom-20,50);sfx('win');}}
+  const nb=btn(ct,'Next step →',()=>{i++;render();},'primary');btn(ct,'Start again',()=>{i=0;render();},'ghost');render();
+}
+// World 12
+function labKoch(root,pid){
+  const p=panel(root,'Koch snowflake','Split every edge in three, push a spike out of the middle. Repeat. The edge grows forever; the area barely moves.','Lab');
+  const s=stage(p,720,440,'Koch snowflake');const poly=E('polygon',{class:'koch'},s);const r=readout(p),ct=controls(p);let n=3,busy=false;
+  const L=330,top=[360,30],br=[360+L/2,30+L*Math.sqrt(3)/2],bl=[360-L/2,30+L*Math.sqrt(3)/2];
+  function koch(k){let pts=[top,br,bl,top];const c=Math.cos(-Math.PI/3),sn=Math.sin(-Math.PI/3);for(let s2=0;s2<k;s2++){const out=[];for(let i=0;i<pts.length-1;i++){const [x1,y1]=pts[i],[x2,y2]=pts[i+1];const dx=(x2-x1)/3,dy=(y2-y1)/3;const a=[x1+dx,y1+dy],b=[x1+2*dx,y1+2*dy];out.push(pts[i],a,[a[0]+dx*c-dy*sn,a[1]+dx*sn+dy*c],b);}out.push(pts[pts.length-1]);pts=out;}return pts;}
+  function draw(){poly.setAttribute('points',koch(n).map(q=>q[0].toFixed(1)+','+q[1].toFixed(1)).join(' '));const per=Math.pow(4/3,n),area=8/5-3/5*Math.pow(4/9,n);
+    r.innerHTML=`Step <b>${n}</b> · <b class="mono">${(3*Math.pow(4,n)).toLocaleString()}</b> edges · perimeter <b class="mono">${per.toFixed(2)}×</b> · area <b class="mono">${area.toFixed(3)}×</b><br>The area stops at <b>1.6×</b>. By step 50 the edge would be <b>1.7 million×</b> longer. Infinite edge, finite area.`;if(n===6)award('koch');}
+  const sl=slider(ct,pid+'-k','Step',0,6,n,1,v=>{n=v;draw();tone([300+v*90],.05,'sine');});
+  btn(ct,'Grow it',()=>{if(busy)return;busy=true;let k=0;const go=()=>{n=k;sl.set(k);draw();tone([300+k*90],.06,'sine');if(k<6&&s.isConnected){k++;setTimeout(go,520);}else{busy=false;sfx('win');}};go();},'primary');
+  draw();
+}
+function labCantor(root){
+  const p=panel(root,'Cantor dust','Take a line. Remove the middle third of every piece. Forever.','Lab');
+  const s=stage(p,720,290,'Cantor set');const r=readout(p),ct=controls(p);let k=7;
+  function draw(){s.innerHTML='';let segs=[[40,600]];for(let n=0;n<k;n++){const y=24+n*37;segs.forEach(([a,b])=>E('rect',{x:a,y,width:Math.max(b-a,0.6),height:16,rx:2,class:'cbar'},s));const t=E('text',{x:618,y:y+13,class:'t-small'},s);t.textContent=(Math.pow(2/3,n)*100).toFixed(n>3?1:0)+'% left';segs=segs.flatMap(([a,b])=>{const d=(b-a)/3;return [[a,a+d],[b-d,b]];});}
+    r.innerHTML=k<7?`${k-1} cut${k===2?'':'s'}. Each keeps 2/3 of what was there.`:`After 6 cuts: <b class="mono">8.8%</b> left. After forever: <b>0% of the length</b>, yet infinitely many points survive. Zoom into any piece and it looks like the whole: <b>self-similar</b>.`;}
+  btn(ct,'Start over',()=>{k=1;draw();},'ghost');btn(ct,'Cut again',()=>{if(k<7){k++;draw();tone([300+k*80],.05,'sine');}},'primary');draw();
+}
+
+// World: Protractor
+function labProtractor(root,pid){
+  const p=panel(root,'Protractor practice','Centre on the corner. Count up from the 0 on your base arm. Watch out for the other scale!','Lab + game');
+  const W=720,Hh=380,cx=360,cy=322,R=232,s=stage(p,W,Hh,'Protractor over an angle');
+  const pr=E('g',{},s);
+  E('path',{d:`M${cx-R},${cy} A${R},${R} 0 0 1 ${cx+R},${cy} Z`,fill:'var(--c2)','fill-opacity':.07,stroke:'var(--c2)','stroke-width':2},pr);
+  E('path',{d:`M${cx-R+64},${cy} A${R-64},${R-64} 0 0 1 ${cx+R-64},${cy}`,fill:'none',stroke:'var(--c2)','stroke-width':1,opacity:.45},pr);
+  for(let d=0;d<=180;d++){const len=d%10===0?16:d%5===0?11:6;const [x1,y1]=polar(cx,cy,R,d),[x2,y2]=polar(cx,cy,R-len,d);E('line',{x1,y1,x2,y2,stroke:'var(--c2)','stroke-width':d%10===0?1.6:1},pr);
+    if(d%10===0){const [ox,oy]=polar(cx,cy,R-29,d);const to=E('text',{x:ox,y:oy,'text-anchor':'middle','dominant-baseline':'middle',style:'font:700 12px var(--ff-mono);fill:var(--c2)'},pr);to.textContent=180-d;
+      const [ix,iy]=polar(cx,cy,R-50,d);const ti=E('text',{x:ix,y:iy,'text-anchor':'middle','dominant-baseline':'middle',style:'font:700 11px var(--ff-mono);fill:var(--c1)'},pr);ti.textContent=d;}}
+  E('line',{x1:cx-R,y1:cy,x2:cx+R,y2:cy,stroke:'var(--c2)','stroke-width':2},pr);E('circle',{cx,cy,r:6,fill:'none',stroke:'var(--c2)','stroke-width':2},pr);
+  const wd=E('path',{'fill-opacity':.35},s);wd.style.fill='var(--c3)';
+  const base=E('line',{class:'s-arm'},s),arm=E('line',{class:'s-arm'},s);E('circle',{cx,cy,r:5,class:'f-ink'},s);
+  const big=E('text',{x:18,y:48,class:'t-big'},s);
+  let side='R',ang=50,mode='free',target=0,score=0,reveal=true;
+  const val=()=>side==='R'?ang:180-ang;
+  const h=handle(s,0,0,'',(x,y)=>{if(mode==='read')return;let a=Math.atan2(-(y-cy),x-cx)*180/Math.PI;if(a<0)a=a<-90?180:0;const na=Math.round(a);if(na%10===0&&na!==ang)sfx('tick');ang=na;draw();},'Angle arm');
+  function draw(){const L=R+52;base.setAttribute('x1',cx);base.setAttribute('y1',cy);base.setAttribute('x2',side==='R'?cx+L:cx-L);base.setAttribute('y2',cy);
+    const [ax,ay]=polar(cx,cy,L,ang);arm.setAttribute('x1',cx);arm.setAttribute('y1',cy);arm.setAttribute('x2',ax);arm.setAttribute('y2',ay);h.set(...polar(cx,cy,R+30,ang));h.style.display=mode==='read'?'none':'';
+    wd.setAttribute('d',!reveal?'':side==='R'?wedge(cx,cy,72,0,Math.max(ang,0.1)):wedge(cx,cy,72,ang,180));
+    big.textContent=reveal?val()+'°':'? ? ?';
+    if(mode==='free')r.innerHTML=`Base arm points <b>${side==='R'?'right':'left'}</b>, so start from the 0 on the <b style="color:var(${side==='R'?'--c1':'--c2'})">${side==='R'?'pink inner':'blue outer'}</b> scale. Angle = <b class="mono">${val()}°</b>. The other scale says ${180-val()}°: that’s the classic trap.`;}
+  const ct=controls(p);segmented(ct,[['free','Explore'],['read','Read it'],['draw','Draw it']],'free',k=>{mode=k;start();});
+  const flip=btn(ct,'Flip the base arm',()=>{side=side==='R'?'L':'R';ang=180-ang;draw();});
+  const game=H('div',{class:'controls',hidden:''},null,p);const r=readout(p);
+  function start(){game.innerHTML='';flip.hidden=mode!=='free';
+    if(mode==='free'){game.hidden=true;reveal=true;draw();return;}
+    game.hidden=false;target=Math.round(rnd(15,165));if(Math.abs(target-90)<4)target+=7;side=Math.random()<.5?'R':'L';
+    if(mode==='read'){reveal=false;ang=side==='R'?target:180-target;draw();r.innerHTML='How big is this angle? Type your reading.';
+      const row=H('div',{class:'numrow'},null,game);const inp=H('input',{type:'text',inputmode:'numeric','aria-label':'Your reading',placeholder:'?'},null,row);H('span',{class:'unit'},'°',row);
+      const go=e=>{const v=parseFloat(inp.value);if(isNaN(v)){sfx('bad');return;}inp.disabled=true;cb.disabled=true;reveal=true;draw();check(Math.abs(v-target)<=1,v,e);};
+      const cb=btn(row,'Check',go,'primary');inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});}
+    else{reveal=true;ang=side==='R'?30:150;draw();r.innerHTML=`Drag the arm to make <b class="mono">${target}°</b>. The base arm points ${side==='R'?'right':'left'}.`;
+      const row=H('div',{class:'controls'},null,game);H('span',{class:'pill'},'Target '+target+'°',row);const cb=btn(row,'Check',e=>{cb.disabled=true;check(Math.abs(val()-target)<=1,val(),e);},'primary');}}
+  function check(ok,v,e){const [x,y]=e&&e.clientX?[e.clientX,e.clientY]:centerOf(arm);
+    if(ok){score++;burst(x,y,30);sfx('ok');addXP(3,x,y);if(score>=3)award('protractor');r.innerHTML=`<b class="good">Spot on: ${target}°.</b> ${score} right so far.`;}
+    else{sfx('bad');r.innerHTML=Math.abs(v-(180-target))<=1?`<b class="bad">You read the other scale!</b> It’s ${target}°. Start from the 0 that sits on the base arm.`:`<b class="bad">Not quite.</b> It’s ${target}°. Count up from the 0 on the base arm.`;}
+    btn(game,'Next one →',()=>start(),'primary');}
+  draw();
+}
+// World: 3D shapes and nets
+function labNets(root){
+  const p=panel(root,'Net folder','Pick a shape and fold its flat net into 3D. Drag the picture to spin it.','Lab');
+  const sc=H('div',{class:'scene3d',role:'img','aria-label':'A net folding into a 3D shape'},null,p);const rig=H('div',{class:'rig'},null,sc);
+  const ct=controls(p);const r=readout(p);
+  const S3=Math.sqrt(3)/2,COLS=['--c1','--c2','--c3','--c4','--c5','--c2'];
+  const R_=(w,h,kids=[])=>({t:'r',w,h,kids}),T_=(w,kids=[])=>({t:'t',w,h:w*S3,kids});
+  const edges=n=>n.t==='r'?{top:[n.w/2,0,0],right:[n.w,n.h/2,90],bottom:[n.w/2,n.h,180],left:[0,n.h/2,270]}:{bottom:[n.w/2,n.h,180],left:[n.w/4,n.h/2,-60],right:[3*n.w/4,n.h/2,60]};
+  const PY=125.26,TE=109.47;
+  const SH={cube:['Cube',6,12,8,'Dice and sugar cubes. 11 different nets fold into a cube.',()=>R_(74,74,[['top',90,R_(74,74)],['left',90,R_(74,74)],['right',90,R_(74,74)],['bottom',90,R_(74,74,[['top',90,R_(74,74)]])]])],
+    cuboid:['Cuboid',6,12,8,'Cereal boxes, bricks and books.',()=>R_(100,66,[['top',90,R_(100,46)],['left',90,R_(66,46)],['right',90,R_(66,46)],['bottom',90,R_(100,46,[['top',90,R_(100,66)]])]])],
+    prism:['Triangular prism',5,9,6,'The same triangle all the way through, like a chocolate bar box or a tent.',()=>R_(72,124,[['left',120,R_(124,72)],['right',120,R_(124,72)],['top',90,T_(72)],['bottom',90,T_(72)]])],
+    pyramid:['Square-based pyramid',5,8,5,'The Great Pyramid of Giza, with a square base and four triangles meeting at a point.',()=>R_(92,92,[['top',PY,T_(92)],['right',PY,T_(92)],['bottom',PY,T_(92)],['left',PY,T_(92)]])],
+    tetra:['Tetrahedron',4,6,4,'Four triangles. A 4-sided dice is one.',()=>T_(110,[['bottom',TE,T_(110)],['left',TE,T_(110)],['right',TE,T_(110)]])]};
+  let cur='cube',t=0,rx=-24,ry=-30,drag=null,busy=false,folders=[],count=0;
+  function face(n){const i=count++;const el=H('div',{class:'f3'},null);el.style.width=n.w+'px';el.style.height=n.h+'px';
+    const pts=n.t==='r'?`0,0 ${n.w},0 ${n.w},${n.h} 0,${n.h}`:`${n.w/2},0 ${n.w},${n.h} 0,${n.h}`;
+    el.innerHTML=`<svg viewBox="0 0 ${n.w} ${n.h}" aria-hidden="true"><polygon points="${pts}" style="fill:var(${COLS[i%6]});fill-opacity:.88;stroke:#13173A;stroke-width:2.5;stroke-linejoin:round"/></svg>`;
+    const ed=edges(n);n.kids.forEach(([e,fold,kid])=>{const [x,y,rot]=ed[e];const hg=H('div',{class:'hinge3'},null,el);hg.style.left=x+'px';hg.style.top=y+'px';hg.style.transform=`rotateZ(${rot}deg)`;
+      const ke=face(kid);ke.style.left=(-kid.w/2)+'px';ke.style.top=(-kid.h)+'px';ke.style.transformOrigin='50% 100%';ke._fold=fold;hg.appendChild(ke);folders.push(ke);});return el;}
+  function build(){rig.innerHTML='';folders=[];count=0;const n=SH[cur][5]();const el=face(n);el.style.left=(-n.w/2)+'px';el.style.top=(-n.h/2)+'px';rig.appendChild(el);setFold();
+    const [nm,f,e,v,fact]=SH[cur];r.innerHTML=`<b>${nm}</b>: ${f} faces, ${e} edges, ${v} vertices. F + V − E = ${f} + ${v} − ${e} = <b>2</b>. (Euler’s rule works for every shape like this.)<br><span class="life">${fact}</span>`;}
+  function setFold(){folders.forEach(el=>el.style.transform=`rotateX(${(el._fold*t).toFixed(2)}deg)`);}
+  function spin(){rig.style.transform=`translateY(-30px) rotateX(${rx}deg) rotateY(${ry}deg)`;}
+  segmented(ct,[['cube','Cube'],['cuboid','Cuboid'],['prism','Prism'],['pyramid','Pyramid'],['tetra','Tetrahedron']],cur,k=>{cur=k;t=0;fs.set(0);build();});
+  const fs=slider(ct,'nets-fold','Fold',0,100,0,1,v=>{t=v/100;setFold();if(v===100)done();});
+  const fb=btn(ct,'Fold it!',()=>{if(busy)return;busy=true;const from=t,to=t>.5?0:1;tween(1800,k=>{t=lerp(from,to,k);fs.set(Math.round(t*100));setFold();},()=>{busy=false;fb.textContent=to?'Unfold':'Fold it!';if(to)done();});},'primary');
+  function done(){const rc=sc.getBoundingClientRect();burst(rc.left+rc.width/2,rc.top+rc.height/2,40);sfx('win');award('netfold');}
+  sc.addEventListener('pointerdown',e=>{sc.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY};sc.style.cursor='grabbing';});
+  sc.addEventListener('pointermove',e=>{if(!drag)return;ry+=(e.clientX-drag.x)*.5;rx=clamp(rx-(e.clientY-drag.y)*.5,-85,85);drag={x:e.clientX,y:e.clientY};spin();});
+  ['pointerup','pointercancel'].forEach(k=>sc.addEventListener(k,()=>{drag=null;sc.style.cursor='';}));
+  function loop(){if(!sc.isConnected)return;if(!drag){ry+=.18;spin();}requestAnimationFrame(loop);}
+  build();spin();if(!RM)requestAnimationFrame(loop);
+}
+// World: Coordinates
+function gridLayer(s,N,U,O){const g=E('g',{},s);for(let i=-N;i<=N;i++){const v=O+i*U;E('line',{x1:v,y1:O-N*U,x2:v,y2:O+N*U,class:'gl'},g);E('line',{x1:O-N*U,y1:v,x2:O+N*U,y2:v,class:'gl'},g);
+    if(i){const tx=E('text',{x:v,y:O+15,class:'t-prot','text-anchor':'middle'},g);tx.textContent=i;const ty=E('text',{x:O-7,y:O-i*U+4,class:'t-prot','text-anchor':'end'},g);ty.textContent=i;}}
+  E('line',{x1:O-N*U-8,y1:O,x2:O+N*U+8,y2:O,class:'s-line'},g);E('line',{x1:O,y1:O-N*U-8,x2:O,y2:O+N*U+8,class:'s-line'},g);
+  const xl=E('text',{x:O+N*U+10,y:O-6,class:'t-name'},g);xl.textContent='x';const yl=E('text',{x:O+8,y:O-N*U-6,class:'t-name'},g);yl.textContent='y';return g;}
+function chest(parent,x,y){const g=E('g',{transform:`translate(${x},${y})`},parent);E('rect',{x:-15,y:-8,width:30,height:18,rx:3,fill:'var(--c3)',stroke:'#13173A','stroke-width':2.5},g);E('path',{d:'M-15,-8Q0,-24 15,-8Z',fill:'#E79A00',stroke:'#13173A','stroke-width':2.5},g);E('circle',{cx:0,cy:-1,r:3,fill:'#13173A'},g);return g;}
+function labCoords(root){
+  const p=panel(root,'Treasure map','Coordinates are addresses: (across, up). Tap the grid to dig for treasure.','Game');
+  const N=6,U=30,O=210,s=stage(p,420,420,'Coordinate grid treasure map');s.style.maxWidth='540px';s.style.marginInline='auto';gridLayer(s,N,U,O);const marks=E('g',{},s);const hov=E('circle',{r:9,fill:'var(--c2)',opacity:0},s);
+  const ct=controls(p);const game=H('div',{class:'controls'},null,p);const r=readout(p);let mode='plot',T={x:0,y:0},found=0,locked=false;
+  segmented(ct,[['plot','Find it'],['read','Read it']],mode,k=>{mode=k;round();});
+  const X=v=>O+v*U,Y=v=>O-v*U;
+  function round(){marks.innerHTML='';game.innerHTML='';locked=false;do{T={x:Math.round(rnd(-N+1,N-1)),y:Math.round(rnd(-N+1,N-1))};}while(T.x===0||T.y===0);
+    if(mode==='plot'){r.innerHTML=`Dig at <b class="mono" style="font-size:22px">(${T.x}, ${T.y})</b>. Across first, then up.`;}
+    else{const g=E('g',{},marks);E('path',{d:`M${X(T.x)},${Y(T.y)-12}L${X(T.x)+10},${Y(T.y)}L${X(T.x)},${Y(T.y)+12}L${X(T.x)-10},${Y(T.y)}Z`,fill:'var(--c4)',stroke:'#13173A','stroke-width':2.5},g);
+      r.innerHTML='A gem! What are its coordinates?';const row=H('div',{class:'numrow'},null,game);H('span',{class:'unit'},'(',row);const ix=H('input',{type:'text',inputmode:'numeric','aria-label':'x coordinate',placeholder:'x',style:'width:90px'},null,row);H('span',{class:'unit'},',',row);const iy=H('input',{type:'text',inputmode:'numeric','aria-label':'y coordinate',placeholder:'y',style:'width:90px'},null,row);H('span',{class:'unit'},')',row);
+      const norm=v=>parseFloat(String(v).replace('−','-'));const go=e=>{const a=norm(ix.value),b=norm(iy.value);if(isNaN(a)||isNaN(b)){sfx('bad');return;}ix.disabled=iy.disabled=cb.disabled=true;result(a===T.x&&b===T.y,a,b,e);};
+      const cb=btn(row,'Check',go,'primary');[ix,iy].forEach(i=>i.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}}));}}
+  function result(ok,a,b,e){locked=true;const [x,y]=e&&e.clientX?[e.clientX,e.clientY]:centerOf(s);
+    if(ok){found++;chest(marks,X(T.x),Y(T.y));burst(x,y,36);sfx('ok');addXP(3,x,y);if(found>=5)award('navigator');r.innerHTML=`<b class="good">Treasure!</b> (${T.x}, ${T.y}). ${found} found.`;}
+    else{sfx('bad');chest(marks,X(T.x),Y(T.y));r.innerHTML=(a===T.y&&b===T.x)?`<b class="bad">You swapped x and y!</b> It’s (${T.x}, ${T.y}): along the corridor, then up the stairs.`:`<b class="bad">Not there.</b> The treasure was at (${T.x}, ${T.y}). Start at 0, go ${T.x<0?'left':'right'} ${Math.abs(T.x)}, then ${T.y<0?'down':'up'} ${Math.abs(T.y)}.`;}
+    btn(game,'Next treasure →',round,'primary');}
+  s.addEventListener('pointermove',e=>{if(mode!=='plot'||locked){hov.setAttribute('opacity',0);return;}const q=svgPt(s,e);const gx=clamp(Math.round((q.x-O)/U),-N,N),gy=clamp(Math.round((O-q.y)/U),-N,N);hov.setAttribute('cx',X(gx));hov.setAttribute('cy',Y(gy));hov.setAttribute('opacity',.35);});
+  s.addEventListener('pointerleave',()=>hov.setAttribute('opacity',0));
+  s.addEventListener('click',e=>{if(mode!=='plot'||locked)return;const q=svgPt(s,e);const gx=clamp(Math.round((q.x-O)/U),-N,N),gy=clamp(Math.round((O-q.y)/U),-N,N);
+    const m=E('g',{},marks);E('path',{d:`M${X(gx)-8},${Y(gy)-8}L${X(gx)+8},${Y(gy)+8}M${X(gx)+8},${Y(gy)-8}L${X(gx)-8},${Y(gy)+8}`,stroke:'var(--c1)','stroke-width':4,'stroke-linecap':'round'},m);
+    result(gx===T.x&&gy===T.y,gx,gy,e);});
+  round();
+}
+// World: Transformations
+function labTransform(root,pid){
+  const p=panel(root,'Shape mover','Slide it, flip it, spin it. The image is always the same size and shape.','Lab');
+  const N=7,U=28,O=210,s=stage(p,420,420,'Transformations on a grid');s.style.maxWidth='540px';s.style.marginInline='auto';gridLayer(s,N,U,O);
+  const guideG=E('g',{},s);const OBJ=[[1,1],[1,4],[2,4],[2,2],[3,2],[3,1]];const X=v=>O+v*U,Y=v=>O-v*U;
+  const obj=E('polygon',{points:OBJ.map(([a,b])=>`${X(a)},${Y(b)}`).join(' '),fill:'var(--c2)','fill-opacity':.35,stroke:'var(--c2)','stroke-width':3,'stroke-linejoin':'round'},s);
+  const img=E('polygon',{fill:'var(--c1)','fill-opacity':.35,stroke:'var(--c1)','stroke-width':3,'stroke-linejoin':'round'},s);
+  const aL=E('text',{class:'t-name',x:X(1)-22,y:Y(4)-6},s);aL.textContent='A';const bL=E('text',{class:'t-name'},s);
+  const ct=controls(p);const sub=H('div',{class:'controls'},null,p);const r=readout(p);let mode='translate',busy=false,dx=3,dy=-5;const did=new Set();
+  const fmt=([a,b])=>`(${Math.round(a)}, ${Math.round(b)})`.replace(/-/g,'−');
+  function apply(kind,label,rule,fn,interp){if(busy)return;busy=true;guideG.innerHTML='';const fin=OBJ.map(fn);
+    if(kind==='translate'){const [a,b]=OBJ[1],[c,d]=fin[1];E('line',{x1:X(a),y1:Y(b),x2:X(c),y2:Y(d),class:'s-guide'},guideG);}
+    if(kind==='rotate'){E('circle',{cx:O,cy:O,r:6,fill:'var(--c1)'},guideG);}
+    if(kind==='reflect'){const L={y:[[0,-N],[0,N]],x:[[-N,0],[N,0]],yx:[[-N,-N],[N,N]]}[label];E('line',{x1:X(L[0][0]),y1:Y(L[0][1]),x2:X(L[1][0]),y2:Y(L[1][1]),stroke:'var(--c1)','stroke-width':3,'stroke-dasharray':'8 6'},guideG);}
+    tween(1100,t=>{const pts=OBJ.map((q,i)=>interp(q,fin[i],t));img.setAttribute('points',pts.map(([a,b])=>`${X(a)},${Y(b)}`).join(' '));bL.setAttribute('x',X(pts[1][0])+6);bL.setAttribute('y',Y(pts[1][1])-6);bL.textContent='A′';},
+      ()=>{busy=false;did.add(kind);if(did.size===3)award('transformer');sfx('ok');r.innerHTML=`${rule}<br><span class="mono">A(1, 4) → A′${fmt(fin[1])}</span>`;});}
+  const lerpP=(a,b,t)=>[lerp(a[0],b[0],t),lerp(a[1],b[1],t)];
+  const rotP=deg=>(a,b,t)=>{const th=deg*t*Math.PI/180,c=Math.cos(th),s2=Math.sin(th);return [a[0]*c-a[1]*s2,a[0]*s2+a[1]*c];};
+  function tools(){sub.innerHTML='';
+    if(mode==='translate'){slider(sub,pid+'-dx','Right/left',-8,4,dx,1,v=>dx=v);slider(sub,pid+'-dy','Up/down',-8,3,dy,1,v=>dy=v);
+      btn(sub,'Slide it',()=>apply('translate','','<b>Translation</b>: every point slides the same distance. (x, y) → (x '+(dx<0?'− '+(-dx):'+ '+dx)+', y '+(dy<0?'− '+(-dy):'+ '+dy)+')',([a,b])=>[a+dx,b+dy],lerpP),'primary');}
+    if(mode==='reflect'){[['y','in the y-axis','(x, y) → (−x, y)',([a,b])=>[-a,b]],['x','in the x-axis','(x, y) → (x, −y)',([a,b])=>[a,-b]],['yx','in the line y = x','(x, y) → (y, x)',([a,b])=>[b,a]]].forEach(([k,l,rule,fn])=>btn(sub,'Reflect '+l,()=>apply('reflect',k,`<b>Reflection ${l}</b>: like a mirror. ${rule}`,fn,lerpP)));}
+    if(mode==='rotate'){[['90° clockwise',-90,'(x, y) → (y, −x)',([a,b])=>[b,-a]],['180°',180,'(x, y) → (−x, −y)',([a,b])=>[-a,-b]],['90° anticlockwise',90,'(x, y) → (−y, x)',([a,b])=>[-b,a]]].forEach(([l,deg,rule,fn])=>btn(sub,'Rotate '+l,()=>apply('rotate','',`<b>Rotation ${l}</b> about the origin O. ${rule}`,fn,rotP(deg))));}
+    r.innerHTML={translate:'Set a slide, then press <b>Slide it</b>. A game character walking is a translation.',reflect:'Pick a mirror line. Your reflection in a mirror is flipped left to right.',rotate:'Spin about the origin O. Clock hands and fidget spinners rotate.'}[mode];}
+  segmented(ct,[['translate','Translate (slide)'],['reflect','Reflect (flip)'],['rotate','Rotate (spin)']],mode,k=>{mode=k;tools();});
+  tools();
+}
+
+/* ================= CONTENT ================= */
+const BASE=[
+{name:'Points & Lines',color:'--c2',tag:'The tiniest thing in maths, and the longest.',
+ say:['Hi {name}! Every pin you drop on a map is a point. It marks a spot, but has no size at all.','A laser beam is a ray. It starts at the pen and never stops.','Your phone’s edge is a segment. It starts, and it ends. Let’s play.'],
+ labs:[labPoint,labLines],
+ ideas:[['Point','A location with no size. Named with a capital letter.'],['Segment','Two endpoints, fixed length. Written AB with a bar.'],['Ray','One start, goes on forever one way.'],['Line','Forever both ways. Exactly one through any two points.'],['Collinear','Points on the same line.'],['Coplanar','Points on the same flat surface.']],
+ quiz:[{q:'Which of these does a point have?',o:['Length','A location','Area','Volume'],a:1,w:'A point has no size. It only marks a position.'},
+  {q:'A laser beam starts at the pen and goes on forever. It’s a…',o:['Line segment','Ray','Line','Point'],a:1,w:'One endpoint, infinite in one direction.'},
+  {q:'Points are collinear when they…',o:['are on one circle','lie on one straight line','are the same colour','are far apart'],a:1,w:'Co-linear: together on one line.'},
+  {q:'How many straight lines pass through two points?',o:['None','Exactly one','Two','Infinitely many'],a:1,w:'One of Euclid’s starting rules.'},
+  {t:'num',q:'How many endpoints does a line segment have?',ans:2,w:'Two ends, which is why it has a length.'}]},
+{name:'Angles',color:'--c1',tag:'How far did it turn?',
+ say:['Skaters talk in angles. A 180 is a half turn. A 360 is a full spin.','Clock hands, pizza slices, laptop lids: all angles.','An angle measures how far something turns, in degrees. Grab the handle!'],
+ labs:[labAngle],
+ ideas:[['Acute','Under 90°.'],['Right','Exactly 90°. A corner.'],['Obtuse','Between 90° and 180°.'],['Straight','Exactly 180°.'],['Reflex','Between 180° and 360°.'],['Complementary · supplementary','Pairs adding to 90° · to 180°.']],
+ quiz:[{q:'A clock shows 3:00. The angle between the hands is…',o:['Acute','Right','Obtuse','Reflex'],a:1,w:'A quarter turn: 90°.'},
+  {q:'A skater does a “180”. She turned through a…',o:['Right angle','Straight angle','Reflex angle','Full turn'],a:1,w:'180° is half a turn.'},
+  {q:'An angle of 250° is…',o:['Obtuse','Straight','Reflex','Acute'],a:2,w:'Between 180° and 360°.'},
+  {q:'Two angles adding to 90° are…',o:['Supplementary','Complementary','Opposite','Reflex'],a:1,w:'Complementary completes a right angle.'},
+  {t:'angle',q:'Drag the arm to make a 135° angle.',target:135,tol:6,w:'135° = a right angle plus half a right angle.'}]},
+{name:'Angle Rules',color:'--c4',tag:'Three rules that crack most angle puzzles.',
+ say:['Open some scissors. The gap between the blades always matches the gap between the handles.','That’s a rule, not luck. It works wherever two straight lines cross.'],
+ labs:[labCross],
+ ideas:[['Vertically opposite','Equal. (vert. opp. ∠s)'],['Straight line','Adds to 180°. (adj. ∠s on st. line)'],['Around a point','Adds to 360°. (∠s at a pt.)'],['Detective tip','Stuck? Find crossing lines first.']],
+ quiz:[{q:'Angles around a point add up to…',o:['90°','180°','270°','360°'],a:3,w:'A full turn.'},
+  {q:'Two lines cross. One angle is 70°. The opposite angle is…',o:['70°','110°','20°','290°'],a:0,w:'Vertically opposite angles are equal.'},
+  {q:'The angle next to that 70° on the straight line is…',o:['70°','110°','180°','290°'],a:1,w:'180 − 70 = 110.'},
+  {q:'∠AOB = 120°, ∠BOC = 150° around O. ∠COA = ?',o:['30°','90°','270°','60°'],a:1,w:'360 − 120 − 150 = 90.'},
+  {t:'num',q:'Two straight lines cross. One angle is 40°. What is the angle right next to it?',ans:140,unit:'°',w:'Angles on a straight line: 180 − 40 = 140°.'}]},
+{name:'Triangles',color:'--c3',tag:'The strongest shape there is.',
+ say:['Cranes, pylons, roof frames: triangles everywhere.','Every triangle ever drawn shares one secret. Its three angles add up to 180°. Let’s prove it by tearing one up.'],
+ labs:[labTriangle],
+ ideas:[['Angle sum','Always 180°.'],['By sides','Equilateral 3 equal · Isosceles 2 · Scalene none.'],['By angles','Right has 90° · Obtuse over 90° · Acute all under.'],['Hypotenuse','Longest side, opposite the right angle.'],['Area','½ × base × height.']],
+ quiz:[{q:'Angles of 60° and 70°. The third is…',o:['50°','60°','70°','110°'],a:0,w:'180 − 60 − 70 = 50.'},
+  {q:'All three sides equal means…',o:['Scalene','Isosceles','Equilateral','Obtuse'],a:2,w:'And every angle is 60°.'},
+  {q:'Base 10 cm, height 6 cm. Area?',o:['60 cm²','30 cm²','16 cm²','32 cm²'],a:1,w:'½ × 10 × 6 = 30.'},
+  {q:'The longest side of a right triangle is the…',o:['Base','Altitude','Hypotenuse','Diameter'],a:2,w:'Opposite the right angle.'},
+  {t:'num',q:'A triangle has angles of 35° and 85°. What is the third angle?',ans:60,unit:'°',w:'180 − 35 − 85 = 60°.'}]},
+{name:'Polygons',color:'--c5',tag:'Coins, signs and honeycombs.',
+ say:['Check your pocket. A £1 coin has 12 sides. A 50p has 7.','STOP signs have 8. Bees build 6-sided cells because they fit with no gaps.','Straight-sided shapes are polygons, and each one has a name.'],
+ labs:[labPolygon,labQuad],
+ ideas:[['Polygon','Closed, straight sides only, 3 or more.'],['Regular','Equal sides AND equal angles.'],['Angle total','(sides − 2) × 180°.'],['Quad family','Parallelogram → rectangle, rhombus → square.'],['Trapezium · kite','One parallel pair · two pairs of equal neighbours.'],['Area tricks','Cut it up, or fill it out to a rectangle.']],
+ quiz:[{q:'The UK £1 coin has 12 sides. It’s a…',o:['Decagon','Hendecagon','Dodecagon','Octagon'],a:2,w:'Dodeca = twelve.'},
+  {q:'A STOP sign is a…',o:['Hexagon','Heptagon','Octagon','Nonagon'],a:2,w:'Eight sides, like an octopus.'},
+  {q:'Inside angles of a hexagon add to…',o:['360°','540°','720°','1080°'],a:2,w:'(6 − 2) × 180 = 720.'},
+  {q:'A square is a rectangle AND a…',o:['Kite only','Rhombus','Trapezium only','Pentagon'],a:1,w:'Right angles + equal sides.'},
+  {t:'num',q:'What do the inside angles of a pentagon add up to?',ans:540,unit:'°',w:'(5 − 2) × 180 = 540°.'}]},
+{name:'Circles & π',color:'--c2',tag:'The number that never ends.',
+ say:['Turn a bike wheel once. How far does the bike move?','Multiply the wheel’s width by π, a number just over 3 that never ends. People have chased it for 4,000 years.'],
+ labs:[labCircle],
+ ideas:[['Radius · diameter','Centre to edge · edge to edge through the centre.'],['Circumference','C = π × d.'],['Area','A = π × r².'],['Pizza fact','Double the radius, four times the pizza.'],['π','About 3.14, or 22/7.']],
+ quiz:[{q:'Circumference equals…',o:['π × r','π × d','2 × d','d ÷ π'],a:1,w:'π × diameter.'},
+  {q:'A 50 cm wheel rolls one turn. About how far?',o:['50 cm','100 cm','157 cm','314 cm'],a:2,w:'3.14 × 50 ≈ 157.'},
+  {q:'Area with radius 10 cm (π ≈ 3.14)?',o:['31.4 cm²','62.8 cm²','314 cm²','100 cm²'],a:2,w:'3.14 × 100.'},
+  {q:'Edge to edge through the centre is the…',o:['Radius','Chord only','Diameter','Arc'],a:2,w:'The longest chord.'},
+  {t:'num',q:'A circle is 10 cm across. Its circumference, to 1 decimal place (π ≈ 3.14)?',ans:31.4,tol:.15,unit:'cm',w:'π × 10 ≈ 31.4 cm.'}]},
+{name:'Parallel Lines',color:'--c4',tag:'Rails, roads and zebra crossings.',
+ say:['Railway rails are parallel. They never meet, or the train falls off.','Where a road crosses them, eight angles appear. Know one, and you know them all.'],
+ labs:[labParallel],
+ ideas:[['Parallel','Never meet. Marked with arrows.'],['Transversal','A line cutting across both.'],['Corresponding (F)','Equal.'],['Alternate (Z)','Equal.'],['Co-interior (C)','Add to 180°.']],
+ quiz:[{q:'Parallel lines…',o:['meet at 90°','never meet','meet once','are always vertical'],a:1,w:'However far you go.'},
+  {q:'Corresponding angles are…',o:['Equal','Add to 180°','Add to 90°','Add to 360°'],a:0,w:'F-angles match.'},
+  {q:'Co-interior angles…',o:['are equal','add to 180°','add to 90°','add to 360°'],a:1,w:'C-angles are supplementary.'},
+  {q:'An angle is 125°. Its alternate angle is…',o:['55°','125°','235°','65°'],a:1,w:'Z-angles are equal.'},
+  {t:'num',q:'Co-interior angles: one is 70°. What is the other?',ans:110,unit:'°',w:'They add to 180°: 180 − 70 = 110°.'}]},
+{name:'Symmetry',color:'--c1',tag:'Why snowflakes look so perfect.',
+ say:['Every snowflake has six-fold symmetry. Frozen water locks together in hexagons.','Butterflies, logos and game characters use symmetry because our brains love it. Go make something!'],
+ labs:[labSym],
+ ideas:[['Line symmetry','Fold and both halves match.'],['Rotational symmetry','Fits onto itself before a full turn.'],['Order','How many fits per turn.'],['Regular n-gon','n mirror lines, order n.']],
+ quiz:[{q:'Lines of symmetry in a square?',o:['1','2','4','8'],a:2,w:'Two through the middles, two along diagonals.'},
+  {q:'The recycling sign has…',o:['only line symmetry','only rotational','both','none'],a:1,w:'Order 3, no mirror line.'},
+  {q:'Which letter has a vertical mirror line?',o:['F','A','G','R'],a:1,w:'Fold A down the middle.'},
+  {q:'Rotational order of a regular hexagon?',o:['3','4','6','12'],a:2,w:'6 fits per turn.'},
+  {t:'num',q:'How many lines of symmetry does a regular octagon (a STOP sign shape) have?',ans:8,w:'A regular shape with n sides has n mirror lines.'}]},
+{name:'Constructions',color:'--c3',tag:'Perfect shapes with no numbers.',
+ say:['2,300 years ago Euclid wrote the most famous maths book ever.','His rule: build everything with a straight edge and a compass. No measuring allowed. Ready to try?'],
+ labs:[labEquilateral,labInequality],
+ ideas:[['Ruler','Draws straight lines. No measuring.'],['Compass','Draws circles, carries lengths.'],['Copy and bisect','Segments, angles, triangles: copy or halve exactly.'],['Triangle inequality','Two sides must beat the third.'],['Impossible three','Square a circle, double a cube, trisect any angle. Proved impossible by 1882.'],['Ideal vs real','Pencil lines have thickness. Proofs don’t.']],
+ quiz:[{q:'Why is AC = AB in Euclid’s triangle?',o:['We measured','Both are radii of one circle','A guess','A is in the middle'],a:1,w:'Every radius of a circle is equal.'},
+  {q:'Sticks of 2, 3 and 9 cm make a triangle?',o:['Yes','No: 2 + 3 is less than 9','Only right-angled','Only equilateral'],a:1,w:'The short two must beat the longest.'},
+  {q:'Impossible with ruler and compass:',o:['Halving an angle','Splitting any angle in three','Halving a segment','An equilateral triangle'],a:1,w:'Trisection is one of the impossible three.'},
+  {q:'What was missing from Euclid’s proof?',o:['A side','A reason the circles must cross','A protractor','The angle sum'],a:1,w:'His rules didn’t guarantee they meet.'},
+  {t:'num',q:'Two sticks are 4 cm and 9 cm. What is the shortest whole-number third stick that makes a triangle?',ans:6,unit:'cm',w:'It must be more than 9 − 4 = 5, so 6 cm.'}]},
+{name:'Congruence',color:'--c5',tag:'Identical twins, mathematically.',
+ say:['Every phone case off a factory line is an exact copy. Same shape, same size: congruent.','Fix a triangle’s three sides and its shape is locked. That’s why bridges love triangles.'],
+ labs:[labRigid,labRules],
+ ideas:[['Congruent ≅','Same shape and size.'],['Order matters','△ABC ≅ △DEF: A↔D, B↔E, C↔F.'],['The rules','SSS · SAS · ASA · AAS · RHS'],['Not enough','AAA and SSA.'],['CPCTC','Congruent triangles: every matching part equal.']],
+ quiz:[{q:'Congruent shapes have the same…',o:['colour','shape and size','area only','position'],a:1,w:'They can be moved, turned or flipped.'},
+  {q:'Bike frames use triangles because…',o:['cheaper','three fixed sides lock the shape','they look cool','lighter'],a:1,w:'SSS: no wobble.'},
+  {q:'Two sides + the angle between them. Rule?',o:['SSS','SAS','ASA','Not enough'],a:1,w:'Side, included Angle, Side.'},
+  {q:'All three angles match. Congruent?',o:['Always','No: maybe different sizes','If right-angled','If isosceles'],a:1,w:'AAA gives similar, not congruent.'},
+  {t:'num',q:'△ABC ≅ △DEF and AB = 7 cm. How long is DE?',ans:7,unit:'cm',w:'Corresponding sides of congruent triangles are equal.'}]},
+{name:'Pythagoras & √2',color:'--c1',tag:'The most famous equation in geometry.',
+ say:['Builders check a corner is square with 3 m, 4 m and a 5 m diagonal.','That’s Pythagoras. And your printer paper hides a number no fraction can ever equal.'],
+ labs:[labPythag,labLadder,labPaper,labProof],
+ ideas:[['Pythagoras','a² + b² = c² in right triangles.'],['Check','c is always the longest side.'],['Triples','3-4-5 · 5-12-13 · 6-8-10 · 8-15-17'],['Irrational','Not a fraction. √2 = 1.41421…']],
+ quiz:[{q:'Short sides 5 and 12. Hypotenuse?',o:['13','17','15','11'],a:0,w:'25 + 144 = 169 = 13².'},
+  {q:'A 5 m ladder, foot 3 m from the wall. Height reached?',o:['2 m','4 m','8 m','3.5 m'],a:1,w:'25 − 9 = 16 = 4².'},
+  {q:'A4 paper: long ÷ short is about…',o:['1.5','1.414 (√2)','2','1.618'],a:1,w:'297 ÷ 210 ≈ 1.414.'},
+  {q:'Not a fraction of whole numbers:',o:['Rational','Irrational','Negative','Even'],a:1,w:'Like √2 and π.'},
+  {t:'num',q:'A right triangle has short sides 6 and 8. How long is the hypotenuse?',ans:10,w:'36 + 64 = 100, and √100 = 10.'}]},
+{name:'Fractals',color:'--c4',tag:'Infinite shapes from one simple rule.',
+ say:['How long is Britain’s coastline? A 100 km ruler says 2,800 km. A 50 km ruler says 3,400 km.','Shorter rulers catch more wiggles, so it keeps growing. That’s a fractal. So are broccoli and lightning.'],
+ labs:[labKoch,labCantor],
+ ideas:[['Self-similar','Zoom in: a copy of the whole.'],['Koch snowflake','Edge × 4/3 each step. Area stops at 8/5.'],['Cantor set','Zero length, infinitely many points.'],['Beyond Euclid','Needs infinite steps. No compass can finish one.']],
+ quiz:[{q:'Each Koch step makes the perimeter how many times longer?',o:['2','4/3','3','3/4'],a:1,w:'4 pieces, each a third: 4/3.'},
+  {q:'After infinite steps, the snowflake has…',o:['finite perimeter','infinite perimeter, finite area','infinite area','zero area'],a:1,w:'Area settles at 8/5.'},
+  {q:'The Cantor set removes…',o:['the first quarter','the middle third','every other point','the ends'],a:1,w:'Middle thirds, forever.'},
+  {q:'Shorter ruler on a coastline → length…',o:['shorter','same','longer','zero'],a:2,w:'The coastline paradox.'},
+  {t:'num',q:'A Koch snowflake starts with 3 edges. Each step turns every edge into 4. How many edges after 2 steps?',ans:48,w:'3 × 4 × 4 = 48.'}]}
+];
+const GLYPH_A=[
+ '<line x1="6" y1="32" x2="34" y2="8"/><circle cx="10" cy="29.6" r="3.4" class="gf"/><circle cx="30" cy="10.4" r="3.4" class="gf"/>',
+ '<path d="M6 32H35M6 32L27 8"/><path d="M18 32A12 12 0 0 0 14 23"/>',
+ '<path d="M6 9L34 31M6 31L34 9"/><path d="M13 14.5A8 8 0 0 1 13 25.5"/><path d="M27 14.5A8 8 0 0 0 27 25.5"/>',
+ '<path d="M20 6L35 32H5Z"/>',
+ '<path d="M20 5L33 12.5V27.5L20 35L7 27.5V12.5Z"/>',
+ '<circle cx="20" cy="20" r="14"/><path d="M6 20H34"/><circle cx="20" cy="20" r="2" class="gf"/>',
+ '<path d="M4 14H36M4 26H36M13 36L27 4"/>',
+ '<path d="M20 3V37" stroke-dasharray="3 4"/><path d="M20 12C12 4 4 10 9 19C4 27 13 34 20 27C27 34 36 27 31 19C36 10 28 4 20 12Z"/>',
+ '<circle cx="15" cy="24" r="10"/><circle cx="25" cy="24" r="10"/><path d="M15 24H25L20 15.3Z" class="gf"/>',
+ '<path d="M4 32L12 12L19 32Z"/><path d="M21 32L29 12L36 32Z"/>',
+ '<path d="M10 30H26V14Z"/><path d="M10 30V37H26V30M26 14H33V30"/>',
+ '<path d="M20 4L33 27H7Z"/><path d="M20 36L7 13H33Z"/>'
+];
+const OLD_IDS=['points','angles','rules','triangles','polygons','circles','parallel','symmetry','constructions','congruence','pythagoras','fractals'];
+BASE.forEach((w,i)=>w.id=OLD_IDS[i]);
+const NEWW={
+protractor:{id:'protractor',name:'Protractor Skills',color:'--c5',tag:'Measure any angle to the exact degree.',
+ say:['Builders, engineers and snooker players all need exact angles.','A protractor has two scales. The trick is picking the right one: count up from the 0 on your base arm.'],
+ labs:[labProtractor],
+ ideas:[['Centre on the corner','Put the cross or hole exactly on the vertex.'],['Base arm on zero','Line one arm up with the 0° line.'],['Pick the scale','Start from the 0 that sits on your base arm.'],['Sense check','Acute angle? The answer must be under 90°.'],['Reflex angles','Measure the small angle, then take it from 360°.']],
+ quiz:[{q:'Where does the centre of the protractor go?',o:['On the vertex (corner)','At the end of an arm','Anywhere on an arm','On the 90° mark'],a:0,w:'The centre must sit exactly on the corner.'},
+  {q:'The base arm lies on the 0 of the inner scale. The other arm passes 50 (inner) and 130 (outer). The angle is…',o:['50°','130°','180°','80°'],a:0,w:'Use the scale whose 0 is on the base arm: the inner one.'},
+  {q:'You read 140°, but the angle is clearly smaller than a right angle. What happened?',o:['You read the wrong scale: it’s 40°','The protractor is broken','It’s a reflex angle','Nothing, 140° is right'],a:0,w:'180 − 140 = 40. Always sense-check.'},
+  {q:'How do you measure a reflex angle of about 300°?',o:['Measure the small angle and subtract it from 360°','Add 180° to your reading','Measure it twice','You can’t'],a:0,w:'A protractor only goes to 180°, so use 360° minus the small angle.'},
+  {t:'angle',q:'Drag the arm to make a 72° angle.',target:72,tol:5,w:'72° is a bit less than a right angle.'}]},
+solids:{id:'solids',name:'3D Shapes & Nets',color:'--c3',tag:'Every box was once a flat piece of card.',
+ say:['Every cereal box started life as a flat piece of card called a net.','Fold it up and it becomes a 3D shape. Let’s fold some!'],
+ labs:[labNets],
+ ideas:[['Faces · edges · vertices','Flat surfaces · where faces meet · corners.'],['Euler’s rule','Faces + vertices − edges = 2.'],['Prism','The same cross-section all the way through.'],['Pyramid','A base plus triangles that meet at one point.'],['Net','A flat pattern that folds into a 3D shape. A cube has 11.']],
+ quiz:[{q:'How many faces does a cube have?',o:['4','6','8','12'],a:1,w:'Like a dice: 6 square faces.'},
+  {q:'One square face and four triangles meeting at a point make a…',o:['Square-based pyramid','Triangular prism','Tetrahedron','Cuboid'],a:0,w:'Like the pyramids in Egypt.'},
+  {q:'How many edges does a triangular prism have?',o:['6','8','9','12'],a:2,w:'3 on each triangle end + 3 joining them = 9.'},
+  {q:'A net is…',o:['A flat pattern that folds into a 3D shape','The outline of a shadow','A 2D shape with 6 sides','The inside of a shape'],a:0,w:'Cut it out, fold it up, glue it.'},
+  {t:'num',q:'A shape has 8 vertices and 12 edges. Use faces + vertices − edges = 2. How many faces?',ans:6,w:'F + 8 − 12 = 2, so F = 6. It’s a cube or cuboid.'}]},
+coords:{id:'coords',name:'Coordinates',color:'--c2',tag:'Every pixel and map square has an address.',
+ say:['Every pixel on your screen and every square in Battleships has an address.','Coordinates are addresses: (across, up). Along the corridor, then up the stairs.'],
+ labs:[labCoords],
+ ideas:[['Origin','(0, 0), where the axes cross.'],['x first','(x, y): across, then up.'],['Negatives','Negative x is left of 0. Negative y is below 0.'],['Four quadrants','The axes split the grid into four quarters.'],['Real life','Maps, game screens, spreadsheets, GPS.']],
+ quiz:[{q:'In (4, 7), which number tells you how far across to go?',o:['4','7','Both','Neither'],a:0,w:'x comes first: across, then up.'},
+  {q:'The point where the axes cross is called the…',o:['Origin','Vertex','Centre line','Hypotenuse'],a:0,w:'The origin is (0, 0).'},
+  {q:'(−3, 2) is in which part of the grid?',o:['Top-left','Top-right','Bottom-left','Bottom-right'],a:0,w:'Left 3 (negative x), up 2.'},
+  {q:'A square has corners (1, 1), (4, 1) and (4, 4). The fourth corner is…',o:['(1, 4)','(4, 1)','(1, 1)','(4, 7)'],a:0,w:'Go up 3 from (1, 1).'},
+  {t:'num',q:'Point P is at (2, 5). It moves 3 squares left. What is its new x-coordinate?',ans:-1,w:'2 − 3 = −1.'}]},
+transform:{id:'transform',name:'Transformations',color:'--c5',tag:'Slide, flip and spin, like a game character.',
+ say:['Game characters move in three basic ways: they slide, they flip and they spin.','Mathematicians call these translation, reflection and rotation. Let’s move some shapes.'],
+ labs:[labTransform],
+ ideas:[['Translation','Slide. Every point moves the same way.'],['Reflection','Flip in a mirror line.'],['Rotation','Turn about a centre by an angle.'],['Congruent image','Same size and shape after all three.'],['Handy rules','y-axis: (−x, y) · x-axis: (x, −y) · 180°: (−x, −y)']],
+ quiz:[{q:'Sliding a shape without turning it is a…',o:['Translation','Reflection','Rotation','Enlargement'],a:0,w:'Translate = slide.'},
+  {q:'Reflect (3, 2) in the y-axis. You get…',o:['(−3, 2)','(3, −2)','(2, 3)','(−3, −2)'],a:0,w:'The y-axis is a vertical mirror: x changes sign.'},
+  {q:'Rotate (2, 5) by 180° about the origin. You get…',o:['(−2, −5)','(5, 2)','(2, −5)','(−5, 2)'],a:0,w:'180° flips both signs.'},
+  {q:'After a translation, reflection or rotation, the image is…',o:['Congruent to the object','Bigger','A different shape','Always upside down'],a:0,w:'Same size and shape, just moved.'},
+  {t:'num',q:'A(1, 4) is translated 5 right and 2 down. What is the y-coordinate of A′?',ans:2,w:'4 − 2 = 2.'}]}};
+const ORDER=['points','angles','protractor','rules','triangles','polygons','circles','solids','parallel','symmetry','coords','transform','constructions','congruence','pythagoras','fractals'];
+const WORLDS=ORDER.map(id=>BASE.find(w=>w.id===id)||NEWW[id]);
+const CURR={points:'Y3 · lines, parallel and perpendicular',angles:'Y3–Y5 · types of angle, degrees',protractor:'Y5 · measure and draw angles',rules:'Y5–Y6 · angles on a line, at a point, opposite',
+ triangles:'Y4–Y6 · classify, angle sum, area',polygons:'Y4–Y6 · polygons, quadrilaterals · KS3 angle sums',circles:'Y6 · parts of a circle · KS3 circumference, area',solids:'Y5–Y6 · 3D shapes and nets',
+ parallel:'Y3 · parallel lines · KS3 angle facts',symmetry:'Y4 · line symmetry · KS3 rotational',coords:'Y4 · first quadrant · Y6 · four quadrants',transform:'Y5–Y6 · translate, reflect · KS3 rotate',
+ constructions:'KS3 · ruler and compass constructions',congruence:'KS3–KS4 · congruent triangles',pythagoras:'KS3–KS4 · Pythagoras, irrational numbers',fractals:'Enrichment · beyond the curriculum'};
+WORLDS.forEach(w=>w.curr=CURR[w.id]);
+const GLYPH={};OLD_IDS.forEach((id,i)=>GLYPH[id]=GLYPH_A[i]);
+GLYPH.protractor='<path d="M4 30A16 16 0 0 1 36 30Z"/><path d="M20 30L31 17"/><path d="M8 26.5H10.5M29.5 26.5H32M20 15V17.5"/>';
+GLYPH.solids='<path d="M8 14L20 8L32 14V28L20 34L8 28Z"/><path d="M8 14L20 20L32 14M20 20V34"/>';
+GLYPH.coords='<path d="M5 22H35M14 5V35"/><circle cx="28" cy="11" r="3.2" class="gf"/><path d="M28 14V22M25 11H14" stroke-dasharray="2 3"/>';
+GLYPH.transform='<path d="M6 30V16L15 30Z"/><path d="M34 30V16L25 30Z" stroke-dasharray="3 3"/><path d="M20 5V35" stroke-dasharray="2 4"/>';
+if(Object.keys(S.stars).some(k=>/^\d+$/.test(k))){const ns={};Object.entries(S.stars).forEach(([k,v])=>{ns[/^\d+$/.test(k)?OLD_IDS[+k]:k]=v;});S.stars=ns;save();}
+S.log=S.log||{};
+
+const LOCK='<svg viewBox="0 0 40 40" aria-hidden="true" fill="none"><rect x="9" y="18" width="22" height="16" rx="4"/><path d="M14 18V13A6 6 0 0 1 26 13V18"/></svg>';
+
+/* ================= views ================= */
+const unlocked=i=>S.explore||i===0||(S.stars[WORLDS[i-1].id]||0)>0;
+function currentWorld(){const n=WORLDS.findIndex(w=>!(S.stars[w.id]>0));return n<0?WORLDS.length-1:n;}
+function renderHome(app){
+  const ni=currentWorld();const started=Object.keys(S.stars).length>0;const hi=S.name?`Welcome back, ${S.name}!`:'Hi! I’m Vertex. Let’s go!';
+  H('section',{class:'hero'},`
+   <div>
+     <span class="eyebrow">A geometry adventure for ages 9 to 18</span>
+     <h1>Geometry is hiding in <em>everything</em> you touch.</h1>
+     <p class="lede">Sixteen worlds. Drag, spin, fold and build your way from a single point to infinite snowflakes.</p>
+     <div class="cta"><a class="btn primary big" href="#w${ni+1}">${started?'Continue':'Start'}: World ${ni+1} →</a><a class="btn big" href="#boss">Boss battle</a></div>
+     <div class="facts"><span><b>16</b> worlds</span><span><b>23</b> labs</span><span><b>16</b> worksheets</span><span><b>16</b> badges</span></div>
+   </div>
+   <div class="hero-art">
+     <svg class="construct" viewBox="0 0 480 430" role="img" aria-label="A ruler-and-compass construction of an equilateral triangle, drawing itself">
+       <g class="hG">
+        <circle class="hCA" pathLength="1" cx="160" cy="250" r="160" fill="none" stroke="var(--c1)" stroke-width="3"/>
+        <circle class="hCB" pathLength="1" cx="320" cy="250" r="160" fill="none" stroke="var(--c2)" stroke-width="3"/>
+        <polygon class="hF" points="160,250 320,250 240,111.4" fill="var(--c3)" fill-opacity=".45"/>
+        <line class="hA" pathLength="1" x1="160" y1="250" x2="320" y2="250" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+        <line class="hS" pathLength="1" x1="160" y1="250" x2="240" y2="111.4" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+        <line class="hS" pathLength="1" x1="320" y1="250" x2="240" y2="111.4" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+        <g class="hP"><circle cx="240" cy="111.4" r="8" fill="var(--ink)"/><text x="230" y="92" class="t-name">C</text></g>
+        <circle cx="160" cy="250" r="8" fill="var(--ink)"/><circle cx="320" cy="250" r="8" fill="var(--ink)"/>
+        <text x="130" y="276" class="t-name">A</text><text x="330" y="276" class="t-name">B</text>
+        <text class="hF t-area" x="240" y="214" text-anchor="middle">AB = AC = BC</text>
+       </g>
+     </svg>
+     <span class="cap">ELEMENTS · BOOK I · PROP. 1</span>
+     <div class="hm">${mascot('cheer')}</div><div class="hb">${hi}</div>
+     <svg class="float f1" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 4L36 34H4Z" fill="var(--c3)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/></svg>
+     <svg class="float f2" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3L35 12V28L20 37L5 28V12Z" fill="var(--c5)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/></svg>
+   </div>`,app);
+  const map=H('section',{class:'section'},`<div class="sec-head"><div><span class="eyebrow">Your quest</span><h2>The map</h2></div><p>Earn at least one star to unlock the next world. ${totalStars()}/${WORLDS.length*3} stars collected.</p></div>`,app);
+  const ex=H('div',{class:'controls',style:'margin:-8px 0 18px'},null,map);
+  btn(ex,S.explore?'Explore mode: on (all unlocked)':'Explore mode: unlock all worlds',()=>{S.explore=!S.explore;save();route();},S.explore?'on':'');
+  renderQuest(map);
+  H('section',{class:'boss-strip'},`<div><span class="eyebrow" style="color:var(--c3)">Boss battle</span><h2>The 60-second blitz</h2><p>Questions from every world, against the clock. Your best: <b class="mono">${S.boss}</b>.</p></div><a class="btn primary big" href="#boss">Take on the boss →</a>`,app);
+  const tro=H('section',{class:'section'},`<div class="sec-head"><div><span class="eyebrow">Trophy shelf</span><h2>Badges</h2></div><p>${Object.keys(S.badges).length} of ${BADGES.length} earned. Some hide inside the labs.</p></div>`,app);
+  const bg=H('div',{class:'badges'},null,tro);BADGES.forEach(([id,t,d,gi,c])=>H('div',{class:'badge'+(S.badges[id]?'':' off'),style:`--bc:var(${c})`},`<div class="medal"><svg viewBox="0 0 40 40" aria-hidden="true">${GLYPH[gi]}</svg></div><b>${t}</b><span>${d}</span>`,bg));
+  H('footer',{},`<span>Content adapted from <i>Geometry for Elementary School</i> (Wikibooks), CC BY-SA 3.0.</span><span>Progress is saved in this browser only.</span>`,app);
+}
+function renderQuest(parent){
+  const box=H('div',{class:'quest'},null,parent);const svg=E('svg',{class:'quest-svg','aria-hidden':'true'},box);const base=E('path',{class:'qp-base'},svg),done=E('path',{class:'qp-done'},svg),dash=E('path',{class:'qp-dash'},svg);
+  const cur=currentWorld();
+  const nodes=WORLDS.map((w,i)=>{const open=unlocked(i),st=S.stars[w.id]||0;const el=H(open?'a':'button',open?{class:'node'+(i===cur?' current':''),href:'#w'+(i+1),style:`--wc:var(${w.color})`}:{class:'node locked',type:'button',style:`--wc:var(${w.color})`},
+    `<span class="disc"><svg viewBox="0 0 40 40" aria-hidden="true">${GLYPH[w.id]}</svg>${open?'':`<span class="lock">${LOCK}</span>`}<span class="num">${i+1}</span></span><span class="nt">${w.name}</span><span class="stars" aria-label="${st} of 3 stars">${starStr(st)}</span>`,box);
+    if(!open)el.onclick=()=>{sfx('bad');el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');toast(`Earn a star in <b>World ${i}</b> first, or switch on Explore mode.`,'Locked',LOCK.replace(/<\/?svg[^>]*>/g,''));};return el;});
+  const here=H('div',{class:'here'},`<span class="tag">YOU</span>${mascot('happy')}`,box);
+  function layout(){const W=box.clientWidth;if(!W)return;const cols=W>=920?4:W>=620?3:2;const rowH=W>=620?230:215,rows=Math.ceil(WORLDS.length/cols),Ht=rows*rowH+56;box.style.height=Ht+'px';svg.setAttribute('viewBox',`0 0 ${W} ${Ht}`);
+    const colW=W/cols,pts=[];nodes.forEach((n,i)=>{const r=Math.floor(i/cols);let c=i%cols;if(r%2)c=cols-1-c;const x=colW*(c+.5),y=rowH*r+108+(c%2?18:0);n.style.left=x+'px';n.style.top=y+'px';pts.push([x,y]);});
+    const path=k=>{let d=`M${pts[0][0]},${pts[0][1]}`;for(let i=1;i<=k;i++){const [px,py]=pts[i-1],[qx,qy]=pts[i];if(Math.abs(py-qy)<40){const mx=(px+qx)/2;d+=` C${mx},${py} ${mx},${qy} ${qx},${qy}`;}else{const side=px>W/2?1:-1,o=colW*0.55*side;d+=` C${px+o},${py} ${qx+o},${qy} ${qx},${qy}`;}}return d;};
+    base.setAttribute('d',path(pts.length-1));dash.setAttribute('d',path(pts.length-1));const lastOpen=WORLDS.reduce((m,_,i)=>unlocked(i)?i:m,0);done.setAttribute('d',lastOpen>0?path(lastOpen):'');
+    here.style.left=Math.max(0,pts[cur][0]-112)+'px';here.style.top=(pts[cur][1]-82)+'px';}
+  layout();requestAnimationFrame(layout);if(window.ResizeObserver)new ResizeObserver(()=>{if(box.isConnected)layout();}).observe(box);
+}
+function renderWorld(app,wi){
+  const W=WORLDS[wi];const wrap=H('div',{class:'world',style:`--wc:var(${W.color})`},null,app);const pid='w'+(wi+1);
+  H('a',{href:'#',class:'back'},'← Back to the map',wrap);
+  H('header',{class:'banner'},`<div><div class="wnum"><span>World ${wi+1} of ${WORLDS.length}</span><span class="stars">${starStr(S.stars[W.id]||0)}</span></div><h1>${W.name}</h1><p class="w-tag">${W.tag}</p><span class="curr">Curriculum: ${W.curr}</span></div><svg class="art" viewBox="0 0 40 40" aria-hidden="true">${GLYPH[W.id]}</svg>`,wrap);
+  guide(wrap,W.say,act=>btn(act,'Let’s play ↓',()=>document.getElementById(pid+'-labs').scrollIntoView({behavior:RM?'auto':'smooth'}),'primary'));
+  H('div',{class:'sec-title',id:pid+'-labs'},`<h2>Play with it</h2><span>Drag anything that glows.</span>`,wrap);
+  const labs=H('div',{class:'labs'},null,wrap);W.labs.forEach(fn=>fn(labs,pid));
+  H('div',{class:'sec-title'},`<h2>Cheat sheet</h2><span>Screenshot this.</span>`,wrap);
+  const ideas=H('div',{class:'ideas'},null,wrap);W.ideas.forEach(([t,d])=>H('div',{class:'idea'},`<span class="k" aria-hidden="true"></span><h3>${t}</h3><p>${d}</p>`,ideas));
+  worksheetCard(wrap,wi);
+  quizBlock(wrap,wi);
+  const nav=H('nav',{class:'wnav'},null,wrap);
+  if(wi>0)H('a',{class:'btn',href:'#w'+wi},`← ${WORLDS[wi-1].name}`,nav);else H('span',{},'',nav);
+  if(wi<WORLDS.length-1)H('a',{class:'btn primary',href:'#w'+(wi+2)},`${WORLDS[wi+1].name} →`,nav);else H('a',{class:'btn primary',href:'#boss'},'Boss battle →',nav);
+}
+const PRAISE=['Nailed it, {name}!','Correct!','Spot on.','Yes! Exactly.','Sharp thinking.','You’re on a roll.'];
+const OOPS=['Not quite. Here’s the trick:','Close one. Look:','Nearly! Here’s why:'];
+let runStreak=0;
+function angleQ(holder,q,done){
+  const s=stage(holder,420,230,'Make an angle');const cx=210,cy=196,R=150;E('line',{x1:cx,y1:cy,x2:cx+R+14,y2:cy,class:'s-arm'},s);
+  const fan=E('path',{'fill-opacity':.3},s);fan.style.fill='var(--c2)';const ghost=E('line',{class:'s-guide'},s),arm=E('line',{x1:cx,y1:cy,class:'s-arm'},s);E('circle',{cx,cy,r:6,class:'f-ink'},s);const lab=E('text',{x:16,y:36,class:'t-type'},s);
+  let a=30,locked=false;const h=handle(s,0,0,'',(x,y)=>{if(locked)return;let raw=Math.atan2(-(y-cy),x-cx)*180/Math.PI;if(raw<0)raw=raw<-90?180:0;const na=Math.round(raw);if(na%15===0&&na!==a)sfx('tick');a=na;draw();},'Angle arm');
+  function draw(){const [x,y]=polar(cx,cy,R,a);arm.setAttribute('x2',x);arm.setAttribute('y2',y);h.set(x,y);fan.setAttribute('d',a?wedge(cx,cy,50,0,a):'');}
+  const c=H('div',{class:'controls'},null,holder);const lk=btn(c,'Lock it in',e=>{locked=true;lk.disabled=true;const [gx,gy]=polar(cx,cy,R+10,q.target);ghost.setAttribute('x1',cx);ghost.setAttribute('y1',cy);ghost.setAttribute('x2',gx);ghost.setAttribute('y2',gy);lab.textContent=`You: ${a}°  ·  target: ${q.target}°`;done(Math.abs(a-q.target)<=q.tol,e);},'primary');draw();}
+function numQ(holder,q,done){
+  const row=H('div',{class:'numrow'},null,holder);const inp=H('input',{type:'text',inputmode:'decimal',autocomplete:'off','aria-label':'Your answer',placeholder:'?'},null,row);if(q.unit)H('span',{class:'unit'},q.unit,row);
+  const b=btn(row,'Check',e=>go(e),'primary');function go(e){const v=parseFloat(inp.value.replace(',','.'));if(isNaN(v)){inp.focus();sfx('bad');return;}inp.disabled=true;b.disabled=true;const [x,y]=centerOf(b);done(Math.abs(v-q.ans)<=(q.tol||0),e&&e.clientX?e:{clientX:x,clientY:y},v);}
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});setTimeout(()=>inp.focus({preventScroll:true}),50);}
+function quizBlock(root,wi){
+  const W=WORLDS[wi],N=W.quiz.length;const sec=H('section',{class:'challenge',id:'challenge'},null,root);
+  const head=H('div',{class:'ch-head'},`<div class="cm">${mascot('think')}</div><div><span class="eyebrow">Challenge · ${N} questions · up to 3 stars</span><h2>Prove you’ve got it</h2><p class="ch-say">Take your time. First-time right answers earn XP.</p></div>`,sec);
+  const cm=$('.cm',head),say=$('.ch-say',head);const setM=(m,t)=>{cm.innerHTML=mascot(m);say.textContent=t.replace('{name}',S.name||'friend');};
+  const box=H('div',{class:'qbox'},null,sec);let i=0,score=0,streak=0;
+  function show(){const q=W.quiz[i];const ty=q.t||'mc';box.innerHTML=`<div class="qmeta"><span>Question ${i+1} of ${N} <span class="qtype">${ty==='mc'?'Pick one':ty==='num'?'Type it':'Drag it'}</span></span><span class="dots">${W.quiz.map((_,k)=>`<i class="${k<i?'done':k===i?'now':''}"></i>`).join('')}</span></div><h3 class="q">${q.q}</h3><div class="qa"></div><div class="why" hidden></div><div class="qnav"></div>`;
+    const qa=$('.qa',box);if(i>0)setM('think','Think it through…');
+    if(ty==='mc'){const opts=H('div',{class:'opts'},null,qa);const bs=[];shuffle(q.o.map((_,k)=>k)).forEach((k,pos)=>{const b=H('button',{class:'opt',type:'button'},`<span class="key">${'ABCD'[pos]}</span><span>${q.o[k]}</span>`,opts);bs[k]=b;b.onclick=e=>{bs.forEach(x=>x.disabled=true);bs[q.a].classList.add('right');if(k!==q.a)b.classList.add('wrong');resolve(k===q.a,e);};});}
+    else if(ty==='num')numQ(qa,q,(ok,e,v)=>resolve(ok,e,ok?'':`The answer is <b class="mono">${q.ans}${q.unit?' '+q.unit:''}</b>. `));
+    else angleQ(qa,q,(ok,e)=>resolve(ok,e));}
+  function resolve(ok,e,extra){const q=W.quiz[i];const why=$('.why',box);
+    if(ok){score++;streak++;runStreak++;const key=`${W.id}q${i}`;let gain=0;if(!S.got[key]){gain=10+(streak>1?5:0);S.got[key]=1;}burst(e.clientX,e.clientY);sfx('ok');if(gain)addXP(gain,e.clientX,e.clientY);if(runStreak>=5)award('streak5');
+      setM('cheer',pick(PRAISE));why.innerHTML=`<b class="good">Correct.</b>${streak>1?`<span class="streak">${streak} in a row</span>`:' '}${q.w}`;}
+    else{streak=0;runStreak=0;sfx('bad');setM('oops',pick(OOPS));why.innerHTML=`<b class="bad">Not quite.</b> ${extra||''}${q.w}`;box.classList.add('shake');setTimeout(()=>box.classList.remove('shake'),400);}
+    why.hidden=false;const nav=$('.qnav',box);const nb=btn(nav,i<N-1?'Next question →':'See my stars',()=>{i++;if(i<N)show();else end();},'primary');setTimeout(()=>nb.focus({preventScroll:true}),60);}
+  function end(){const stars=score>=N?3:score>=N-1?2:score>=N-2?1:0;const prev=S.stars[W.id]||0;S.stars[W.id]=Math.max(prev,stars);const g=S.log[W.id]||{best:0,tries:0};g.tries++;g.last=score;g.best=Math.max(g.best,score);g.n=N;g.date=Date.now();S.log[W.id]=g;save();updateHUD();award('first');if(stars===3)award('perfect');if(Object.values(S.stars).filter(v=>v>0).length>=8)award('half');
+    const msg=stars===3?'World mastered. Flawless!':stars===2?'So close. Go again for the third star?':stars===1?'Good start. Replay the labs, then retry.':'Have another play with the labs and try again.';
+    setM(stars>=2?'cheer':stars===1?'happy':'oops',stars===3?'Incredible, {name}!':stars?'Nice work!':'You’ve got this. Try again!');
+    box.innerHTML=`<div class="result"><div class="big-stars">${starStr(stars)}</div><h3>${score} of ${N} correct</h3><p>${msg}${stars>0&&!prev&&wi<WORLDS.length-1?` <b>World ${wi+2} unlocked!</b>`:''}</p><div class="controls" style="justify-content:center"></div></div>`;
+    const c=$('.controls',box);btn(c,'Try again',()=>{i=0;score=0;streak=0;show();});
+    if(wi<WORLDS.length-1)H('a',{class:'btn primary',href:'#w'+(wi+2)},`Next world →`,c);else H('a',{class:'btn primary',href:'#boss'},'Boss battle →',c);
+    if(stars>=1){const rc=box.getBoundingClientRect();burst(rc.left+rc.width/2,rc.top+40,stars===3?140:50);sfx('win');}}
+  show();
+}
+function renderBoss(app){
+  const wrap=H('div',{class:'boss'},null,app);H('a',{href:'#',class:'back'},'← Back to the map',wrap);const box=H('div',{class:'boss-box'},null,wrap);
+  const pool=WORLDS.flatMap(w=>w.quiz.filter(q=>!q.t).map(q=>({...q,wn:w.name})));let timer=null;
+  function intro(){box.innerHTML=`<div class="boss-top"><div><span class="eyebrow">Boss battle</span><h1>60-second blitz</h1></div><div>${mascot('wow')}</div></div><p>Questions from all sixteen worlds. Answer as many as you can. Wrong answers cost 3 seconds. Each right answer earns 3 XP.</p><p class="mono"><b>Your best: ${S.boss}</b></p><div class="controls"></div>`;btn($('.controls',box),'Start the clock',start,'primary big');}
+  function start(){let qs=shuffle(pool),qi=0,score=0,left=60;let deadline=performance.now()+60000;
+    box.innerHTML=`<div class="bstat"><span>Score <b id="bs">0</b></span><span id="bt">60.0 s</span></div><div class="timer"><i id="bi"></i></div><div id="bq"></div>`;
+    const bi=$('#bi',box),bt=$('#bt',box),bs=$('#bs',box),bq=$('#bq',box);
+    function ask(){if(qi>=qs.length){qs=shuffle(pool);qi=0;}const q=qs[qi];bq.innerHTML=`<p class="eyebrow">${q.wn}</p><h3 class="q">${q.q}</h3><div class="opts"></div>`;
+      shuffle(q.o.map((_,k)=>k)).forEach((k,pos)=>{const o=q.o[k];const b=H('button',{class:'opt',type:'button'},`<span class="key">${'ABCD'[pos]}</span><span>${o}</span>`,$('.opts',bq));b.onclick=e=>{if(k===q.a){score++;bs.textContent=score;sfx('ok');burst(e.clientX,e.clientY,16);box.classList.remove('flash-good');void box.offsetWidth;box.classList.add('flash-good');}else{deadline-=3000;sfx('bad');box.classList.remove('flash-bad');void box.offsetWidth;box.classList.add('flash-bad');}qi++;ask();};});}
+    ask();timer=setInterval(()=>{if(!box.isConnected){clearInterval(timer);return;}left=Math.max(0,(deadline-performance.now())/1000);bi.style.width=(left/60*100)+'%';bt.textContent=left.toFixed(1)+' s';if(left<=0){clearInterval(timer);finish(score);}},100);}
+  function finish(score){const best=score>S.boss;if(best)S.boss=score;save();
+    box.innerHTML=`<div class="boss-top"><div><span class="eyebrow">Time!</span><h1>${score} correct</h1></div><div>${mascot(score>=10?'cheer':score>=5?'happy':'oops')}</div></div><p>${best?'<b class="good">New personal best!</b>':`Your best is ${S.boss}.`} +${score*3} XP.</p><div class="controls"></div>`;
+    const c=$('.controls',box);btn(c,'Play again',start,'primary big');H('a',{class:'btn big',href:'#'},'Back to the map',c);
+    const rc=box.getBoundingClientRect();addXP(score*3,rc.left+rc.width/2,rc.top+60);if(score>=10)award('boss');if(best&&score>0){burst(innerWidth/2,innerHeight/3,120);sfx('win');}}
+  intro();
+}
+/* ================= files, progress code, report ================= */
+let DLP=null;
+function getDL(){if(!DLP)DLP=(window.claude&&window.claude.use)?Promise.resolve(window.claude.use('downloads')).catch(()=>null):Promise.resolve(null);return DLP;}
+function hideNoDL(scope){getDL().then(d=>{if(!d)scope.querySelectorAll('.needs-dl').forEach(b=>b.hidden=true);});}
+async function saveFile(name,data,isPath){try{const d=await getDL();if(!d)throw {code:'unavailable'};let body=data;if(isPath){const res=await fetch(data);if(!res.ok)throw {code:'missing'};body=await res.blob();}await d.save({filename:name,data:body});toast(`Saved <b>${name}</b>`,'Done');}
+  catch(e){if(e&&e.code==='declined')return;toast(isPath?'Saving isn’t available here. Use “Open to print” instead.':'Saving isn’t available here. Use Copy instead.');}}
+async function copyText(t,el){try{await navigator.clipboard.writeText(t);toast('Copied');}catch(e){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Selected. Press Ctrl+C (or ⌘C) to copy.');}}
+const fmtDate=t=>t?new Date(t).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'–';
+const B32='0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+function codeFrom(st){let v=0n;const push=(val,bits)=>{v=(v<<BigInt(bits))|BigInt(val&(2**bits-1));};push(1,3);WORLDS.forEach(w=>push(st.stars[w.id]||0,2));let bm=0;BADGES.forEach((b,i)=>{if(st.badges[b[0]])bm|=1<<i;});push(bm,16);push(Math.min(st.xp,65535),16);push(Math.min(st.boss,127),7);push(Number(v%997n)&255,8);
+  let s='';for(let i=0;i<18;i++){s=B32[Number(v&31n)]+s;v>>=5n;}return s.slice(0,6)+'-'+s.slice(6,12)+'-'+s.slice(12);}
+function readCode(str){const c=String(str).toUpperCase().replace(/O/g,'0').replace(/[IL]/g,'1').replace(/[^0-9A-Z]/g,'');if(c.length!==18)return null;let v=0n;for(const ch of c){const i=B32.indexOf(ch);if(i<0)return null;v=(v<<5n)|BigInt(i);}
+  const chk=Number(v&255n);let d=v>>8n;if((Number(d%997n)&255)!==chk)return null;const boss=Number(d&127n);d>>=7n;const xp=Number(d&65535n);d>>=16n;const bm=Number(d&65535n);d>>=16n;const stars=[];for(let i=WORLDS.length-1;i>=0;i--){stars[i]=Number(d&3n);d>>=2n;}if(d!==1n)return null;
+  const st={};WORLDS.forEach((w,i)=>{if(stars[i])st[w.id]=stars[i];});const badges={};BADGES.forEach((b,i)=>{if(bm&(1<<i))badges[b[0]]=1;});return {stars:st,xp,boss,badges};}
+function rankOf(xp){let n=RANKS[0][1];RANKS.forEach(r=>{if(xp>=r[0])n=r[1];});return n;}
+function summaryText(){const L=[];L.push('GEOMETRY QUEST · PROGRESS REPORT');L.push(`Learner: ${S.name||'(no name given)'}`);L.push(`Date: ${fmtDate(Date.now())}`);
+  L.push(`Stars: ${totalStars()} of ${WORLDS.length*3} · XP: ${S.xp} (${rankOf(S.xp)}) · Badges: ${Object.keys(S.badges).length} of ${BADGES.length} · Boss best: ${S.boss}`);L.push(`Progress code: ${codeFrom(S)}`);L.push('');
+  WORLDS.forEach((w,i)=>{const g=S.log[w.id];const st=S.stars[w.id]||0;L.push(`${String(i+1).padStart(2,' ')}. ${w.name.padEnd(20,' ')} ${'★'.repeat(st)}${'☆'.repeat(3-st)}  ${g?`best ${g.best}/${g.n||5}, ${g.tries} ${g.tries===1?'try':'tries'}, last ${fmtDate(g.date)}`:'not tried yet'}`);L.push(`    Curriculum: ${w.curr}`);});
+  const got=BADGES.filter(b=>S.badges[b[0]]).map(b=>b[1]);L.push('');L.push('Badges: '+(got.length?got.join(', '):'none yet'));return L.join('\n');}
+function renderReport(app){
+  const wrap=H('div',{class:'world'},null,app);H('a',{href:'#',class:'back'},'← Back to the map',wrap);
+  H('header',{class:'banner',style:'--wc:var(--c4)'},`<div><div class="wnum"><span>For parents and carers</span></div><h1>Progress report</h1><p class="w-tag">${S.name?S.name+' · ':''}${fmtDate(Date.now())}</p></div><div class="rm">${mascot('cheer')}</div>`,wrap);
+  const done=WORLDS.filter(w=>S.stars[w.id]>0).length;
+  H('div',{class:'tiles'},[[`${totalStars()}<small>/${WORLDS.length*3}</small>`,'stars'],[`${done}<small>/${WORLDS.length}</small>`,'worlds passed'],[S.xp,`XP · ${rankOf(S.xp)}`],[`${Object.keys(S.badges).length}<small>/${BADGES.length}</small>`,'badges'],[S.boss,'boss best']].map(([v,l])=>`<div class="tile"><b>${v}</b><span>${l}</span></div>`).join(''),wrap);
+  H('div',{class:'sec-title'},`<h2>World by world</h2><span>Curriculum references are for England and approximate.</span>`,wrap);
+  H('div',{class:'tablewrap'},`<table class="rep"><thead><tr><th>World</th><th>Curriculum</th><th>Stars</th><th>Best</th><th>Tries</th><th>Last tried</th></tr></thead><tbody>${WORLDS.map((w,i)=>{const g=S.log[w.id];return `<tr><td><b>${i+1}. ${w.name}</b></td><td>${w.curr}</td><td class="stars">${starStr(S.stars[w.id]||0)}</td><td class="mono">${g?g.best+'/'+(g.n||5):'–'}</td><td class="mono">${g?g.tries:'–'}</td><td>${g?fmtDate(g.date):'–'}</td></tr>`;}).join('')}</tbody></table>`,wrap);
+  const cc=H('section',{class:'lab'},`<div class="lab-head"><div><h3>Progress code</h3><p>No accounts, no sign-up. This code holds stars, XP, badges and the boss score. Write it in a home-ed log, send it to a tutor, or type it on another device to carry on there.</p></div><span class="lab-tag">No account</span></div><div class="codebox" id="pcode">${codeFrom(S)}</div><div class="controls" id="pc-act"></div>`,wrap);
+  btn($('#pc-act',cc),'Copy code',()=>copyText(codeFrom(S),$('#pcode',cc)),'primary');
+  const chk=H('section',{class:'lab'},`<div class="lab-head"><div><h3>Check or load a code</h3><p>Paste a learner’s code to see their progress, or to move it onto this device.</p></div></div><div class="numrow"><input id="code-in" type="text" autocomplete="off" spellcheck="false" placeholder="XXXXXX-XXXXXX-XXXXXX" style="width:min(100%,420px);font-size:20px;text-transform:uppercase"></div><div class="controls" id="ck-act"></div><div id="ck-out"></div>`,wrap);
+  const out=$('#ck-out',chk);btn($('#ck-act',chk),'Check code',()=>{const d=readCode($('#code-in',chk).value);if(!d){out.innerHTML='<p class="readout"><b class="bad">That code doesn’t work.</b> Check for a typo: it has 18 letters and numbers.</p>';sfx('bad');return;}
+    const ts=Object.values(d.stars).reduce((a,b)=>a+b,0);out.innerHTML=`<div class="readout"><b class="good">Valid code.</b> ${ts}/${WORLDS.length*3} stars · ${d.xp} XP (${rankOf(d.xp)}) · ${Object.keys(d.badges).length} badges · boss best ${d.boss}<br>${WORLDS.map((w,i)=>`${i+1}. ${w.name} <span class="stars">${starStr(d.stars[w.id]||0)}</span>`).join(' · ')}</div><div class="controls" style="margin-top:10px" id="ld"></div>`;
+    btn($('#ld',out),'Load this progress here',()=>{WORLDS.forEach(w=>{if((d.stars[w.id]||0)>(S.stars[w.id]||0))S.stars[w.id]=d.stars[w.id];});S.xp=Math.max(S.xp,d.xp);S.boss=Math.max(S.boss,d.boss);Object.assign(S.badges,d.badges);S.seen=true;save();updateHUD();toast('Progress loaded onto this device');route();},'primary');sfx('ok');},'primary');
+  const sm=H('section',{class:'lab'},`<div class="lab-head"><div><h3>Summary for your records</h3><p>Plain text you can paste into a home-education log or email.</p></div></div><pre class="sumtext" id="sumt"></pre><div class="controls" id="sm-act"></div>`,wrap);
+  $('#sumt',sm).textContent=summaryText();btn($('#sm-act',sm),'Copy summary',()=>copyText(summaryText(),$('#sumt',sm)),'primary');btn($('#sm-act',sm),'Save as text file',()=>saveFile(`Geometry Quest progress ${new Date().toISOString().slice(0,10)}.txt`,summaryText()),'needs-dl');
+  const pk=H('section',{class:'lab'},`<div class="lab-head"><div><h3>Printable packs</h3><p>All 16 worksheets in one file, and all the answer sheets in another. Print at 100% so measuring questions work.</p></div><span class="lab-tag">PDF</span></div><div class="controls" id="pk-act"></div>`,wrap);
+  const pa=$('#pk-act',pk);btn(pa,'Download worksheet pack',()=>saveFile('Geometry Quest worksheet pack.pdf','worksheets/geometry-quest-worksheet-pack.pdf',true),'primary needs-dl');btn(pa,'Download answer pack',()=>saveFile('Geometry Quest answer pack.pdf','worksheets/geometry-quest-answer-pack.pdf',true),'needs-dl');
+  H('a',{class:'btn ghost',href:'worksheets/geometry-quest-worksheet-pack.pdf',target:'_blank',rel:'noopener'},'Open worksheets',pa);H('a',{class:'btn ghost',href:'worksheets/geometry-quest-answer-pack.pdf',target:'_blank',rel:'noopener'},'Open answers',pa);
+  const rs=H('section',{class:'lab'},`<div class="lab-head"><div><h3>Start again</h3><p>Erase all progress on this device. Copy the progress code first if you might want it back.</p></div></div><div class="controls" id="rs-act"></div>`,wrap);
+  let armed=false;const rb=btn($('#rs-act',rs),'Erase progress on this device',()=>{if(!armed){armed=true;rb.textContent='Tap again to erase everything';rb.classList.add('primary');setTimeout(()=>{armed=false;rb.textContent='Erase progress on this device';rb.classList.remove('primary');},4000);return;}
+    S={xp:0,stars:{},got:{},boss:0,sound:S.sound,name:'',badges:{},explore:false,seen:false,log:{}};save();updateHUD();location.hash='';route();onboard();});
+  hideNoDL(wrap);
+}
+function worksheetCard(wrap,wi){const W=WORLDS[wi];const n=String(wi+1).padStart(2,'0');const ws=`worksheets/w${n}-worksheet.pdf`,an=`worksheets/w${n}-answers.pdf`;
+  const card=H('section',{class:'lab print'},`<div class="print-grid"><div>${mascot('happy')}</div><div><span class="eyebrow">Print and practise</span><h3>World ${wi+1} worksheet</h3><p class="muted">Pencil-and-paper practice: drawing, measuring and real-life tasks. The answer sheet is separate, for the grown-up.${W.id==='solids'?' Includes a cut-out dice net to fold and glue.':''}</p><div class="controls" style="margin-top:12px"></div><p class="small">Print at 100% (“actual size”) so the measuring questions work with a real ruler and protractor.</p></div></div>`,wrap);
+  const c=$('.controls',card);btn(c,'Download worksheet',()=>saveFile(`Geometry Quest World ${wi+1} worksheet.pdf`,ws,true),'primary needs-dl');btn(c,'Download answers',()=>saveFile(`Geometry Quest World ${wi+1} answers.pdf`,an,true),'needs-dl');
+  H('a',{class:'btn ghost',href:ws,target:'_blank',rel:'noopener'},'Open worksheet to print',c);H('a',{class:'btn ghost',href:an,target:'_blank',rel:'noopener'},'Open answers',c);hideNoDL(card);}
+
+function onboard(){
+  const back=H('div',{class:'modal-back',role:'dialog','aria-modal':'true','aria-labelledby':'ob-t'},null,document.body);
+  const m=H('div',{class:'modal'},`<div class="mm">${mascot('cheer')}</div><h2 id="ob-t">Hi! I’m Vertex.</h2><p>I’m a triangle, and I’ll be your guide through 16 worlds of shapes, spins and secrets. What should I call you?</p>`,back);
+  const inp=H('input',{type:'text',id:'ob-name',maxlength:'20',placeholder:'Your first name or a nickname',autocomplete:'off'},null,m);const c=H('div',{class:'controls'},null,m);
+  const go=()=>{S.name=inp.value.trim().slice(0,20);S.seen=true;save();back.remove();burst(innerWidth/2,innerHeight/3,90);sfx('win');route();};
+  btn(c,'Let’s go!',go,'primary big');btn(c,'Skip',()=>{S.seen=true;save();back.remove();},'ghost');inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});setTimeout(()=>inp.focus(),100);
+}
+function route(){const h=location.hash.slice(1);const app=$('#app');app.innerHTML='';window.scrollTo(0,0);const v=H('div',{class:'view'},null,app);
+  if(/^w\d+$/.test(h)){const i=+h.slice(1)-1;if(WORLDS[i])return renderWorld(v,i);}
+  if(h==='boss')return renderBoss(v);if(h==='report')return renderReport(v);renderHome(v);}
+addEventListener('hashchange',route);
+updateHUD();route();if(!S.seen)onboard();
+</script>
