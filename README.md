@@ -4,9 +4,11 @@ An interactive geometry course for learners aged 9 to 18, built for home educati
 
 ## Features
 
+- **Clear explanations throughout.** A "Start here" guide (the **Help** button) explains what geometry is, why it matters and how the course works, for learners and for parents. Every world lists what you'll be able to do by the end, real jobs and situations that use it, and a five-step "how this page works" strip.
 - **16 worlds in curriculum order**, each opening with a real-life hook (scissors, railway crossings, bike wheels, A4 paper, the £1 coin).
 - **23 interactive labs.** Tear the corners off a triangle to see 180°, roll out a wheel to find π, fold nets into 3D shapes, measure with an on-screen protractor, hunt for treasure on a coordinate grid.
 - **Challenges** at the end of every world, 5 questions each: multiple choice, typed answers and drag-to-make-an-angle. Up to 3 stars per world.
+- **Design your own guide.** Pick a shape (triangle, square, circle, pentagon, hexagon or diamond), a colour, eyes, something to wear and a name, or upload a picture (such as a photo of the learner's own drawing) to fill the shape. The guide appears throughout the course. Pictures are resized and stored only in the browser; nothing is uploaded.
 - **Quest map** that unlocks worlds as stars are earned, with an Explore mode to unlock everything.
 - **XP, ranks and 16 badges**, some hidden inside the labs.
 - **Boss battle:** a 60-second quiz across all worlds.
@@ -51,7 +53,7 @@ It's a single HTML page with no build step and no dependencies to install.
 ```bash
 # serve the folder so the worksheet links work
 python3 -m http.server 8000
-# then open http://localhost:8000
+# then open http://localhost:8000/geometry-quest.html
 ```
 
 Opening the HTML file directly also works, but the worksheet links need the page to be served over HTTP.
@@ -61,7 +63,7 @@ The "Download" buttons for worksheets and summaries use a download feature of th
 ## Project structure
 
 ```
-index.html               # the whole app: HTML, CSS and JavaScript
+geometry-quest.html      # the whole app: HTML, CSS and JavaScript
 worksheets/              # generated PDFs
   w01-worksheet.pdf … w16-worksheet.pdf
   w01-answers.pdf   … w16-answers.pdf
