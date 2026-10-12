@@ -1465,7 +1465,10 @@ function renderBoss(app){
 let DLP=null;
 function getDL(){if(!DLP)DLP=(window.claude&&window.claude.use)?Promise.resolve(window.claude.use('downloads')).catch(()=>null):Promise.resolve(null);return DLP;}
 function hideNoDL(scope){getDL().then(d=>{if(!d)scope.querySelectorAll('.needs-dl').forEach(b=>b.hidden=true);});}
-async function saveFile(name,data,isPath){try{const d=await getDL();if(!d)throw {code:'unavailable'};let body=data;if(isPath){const res=await fetch(data);if(!res.ok)throw {code:'missing'};body=await res.blob();}await d.save({filename:name,data:body});toast(`Saved <b>${name}</b>`,'Done');}
+let WSB=null;
+async function wsBase(){if(WSB!==null)return WSB;for(const b of ['worksheets/','']){try{const r=await fetch(b+'w01-worksheet.pdf',{method:'HEAD',cache:'no-store'});if(r.ok){WSB=b;return b;}}catch(e){}}WSB='worksheets/';return WSB;}
+function fixLinks(scope){wsBase().then(b=>scope.querySelectorAll('a[data-pdf]').forEach(a=>a.href=b+a.dataset.pdf));}
+async function saveFile(name,data,isPath){try{const d=await getDL();if(!d)throw {code:'unavailable'};let body=data;if(isPath){const res=await fetch((await wsBase())+data);if(!res.ok)throw {code:'missing'};body=await res.blob();}await d.save({filename:name,data:body});toast(`Saved <b>${name}</b>`,'Done');}
   catch(e){if(e&&e.code==='declined')return;toast(isPath?'Saving isn’t available here. Use “Open to print” instead.':'Saving isn’t available here. Use Copy instead.');}}
 async function copyText(t,el){try{await navigator.clipboard.writeText(t);toast('Copied');}catch(e){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Selected. Press Ctrl+C (or ⌘C) to copy.');}}
 const fmtDate=t=>t?new Date(t).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'–';
@@ -1496,17 +1499,17 @@ function renderReport(app){
   const sm=H('section',{class:'lab'},`<div class="lab-head"><div><h3>Summary for your records</h3><p>Plain text you can paste into a home-education log or email.</p></div></div><pre class="sumtext" id="sumt"></pre><div class="controls" id="sm-act"></div>`,wrap);
   $('#sumt',sm).textContent=summaryText();btn($('#sm-act',sm),'Copy summary',()=>copyText(summaryText(),$('#sumt',sm)),'primary');btn($('#sm-act',sm),'Save as text file',()=>saveFile(`Geometry Quest progress ${new Date().toISOString().slice(0,10)}.txt`,summaryText()),'needs-dl');
   const pk=H('section',{class:'lab'},`<div class="lab-head"><div><h3>Printable packs</h3><p>All 16 worksheets in one file, and all the answer sheets in another. Print at 100% so measuring questions work.</p></div><span class="lab-tag">PDF</span></div><div class="controls" id="pk-act"></div>`,wrap);
-  const pa=$('#pk-act',pk);btn(pa,'Download worksheet pack',()=>saveFile('Geometry Quest worksheet pack.pdf','worksheets/geometry-quest-worksheet-pack.pdf',true),'primary needs-dl');btn(pa,'Download answer pack',()=>saveFile('Geometry Quest answer pack.pdf','worksheets/geometry-quest-answer-pack.pdf',true),'needs-dl');
-  H('a',{class:'btn ghost',href:'worksheets/geometry-quest-worksheet-pack.pdf',target:'_blank',rel:'noopener'},'Open worksheets',pa);H('a',{class:'btn ghost',href:'worksheets/geometry-quest-answer-pack.pdf',target:'_blank',rel:'noopener'},'Open answers',pa);
+  const pa=$('#pk-act',pk);btn(pa,'Download worksheet pack',()=>saveFile('Geometry Quest worksheet pack.pdf','geometry-quest-worksheet-pack.pdf',true),'primary needs-dl');btn(pa,'Download answer pack',()=>saveFile('Geometry Quest answer pack.pdf','geometry-quest-answer-pack.pdf',true),'needs-dl');
+  H('a',{class:'btn ghost',href:'worksheets/geometry-quest-worksheet-pack.pdf','data-pdf':'geometry-quest-worksheet-pack.pdf',target:'_blank',rel:'noopener'},'Open worksheets',pa);H('a',{class:'btn ghost',href:'worksheets/geometry-quest-answer-pack.pdf','data-pdf':'geometry-quest-answer-pack.pdf',target:'_blank',rel:'noopener'},'Open answers',pa);
   const rs=H('section',{class:'lab'},`<div class="lab-head"><div><h3>Start again</h3><p>Erase all progress on this device. Copy the progress code first if you might want it back.</p></div></div><div class="controls" id="rs-act"></div>`,wrap);
   let armed=false;const rb=btn($('#rs-act',rs),'Erase progress on this device',()=>{if(!armed){armed=true;rb.textContent='Tap again to erase everything';rb.classList.add('primary');setTimeout(()=>{armed=false;rb.textContent='Erase progress on this device';rb.classList.remove('primary');},4000);return;}
     S={xp:0,stars:{},got:{},boss:0,sound:S.sound,name:'',badges:{},explore:false,seen:false,log:{}};save();updateHUD();location.hash='';route();onboard();});
-  hideNoDL(wrap);
+  hideNoDL(wrap);fixLinks(wrap);
 }
-function worksheetCard(wrap,wi){const W=WORLDS[wi];const n=String(wi+1).padStart(2,'0');const ws=`worksheets/w${n}-worksheet.pdf`,an=`worksheets/w${n}-answers.pdf`;
+function worksheetCard(wrap,wi){const W=WORLDS[wi];const n=String(wi+1).padStart(2,'0');const ws=`w${n}-worksheet.pdf`,an=`w${n}-answers.pdf`;
   const card=H('section',{class:'lab print',id:'w'+(wi+1)+'-print'},`<div class="print-grid"><div>${mascot('happy')}</div><div><span class="eyebrow">Print and practise</span><h3>World ${wi+1} worksheet</h3><p class="muted">Pencil-and-paper practice: drawing, measuring and real-life tasks. The answer sheet is separate, for the grown-up.${W.id==='solids'?' Includes a cut-out dice net to fold and glue.':''}</p><div class="controls" style="margin-top:12px"></div><p class="small">Print at 100% (“actual size”) so the measuring questions work with a real ruler and protractor.</p></div></div>`,wrap);
   const c=$('.controls',card);btn(c,'Download worksheet',()=>saveFile(`Geometry Quest World ${wi+1} worksheet.pdf`,ws,true),'primary needs-dl');btn(c,'Download answers',()=>saveFile(`Geometry Quest World ${wi+1} answers.pdf`,an,true),'needs-dl');
-  H('a',{class:'btn ghost',href:ws,target:'_blank',rel:'noopener'},'Open worksheet to print',c);H('a',{class:'btn ghost',href:an,target:'_blank',rel:'noopener'},'Open answers',c);hideNoDL(card);}
+  H('a',{class:'btn ghost',href:'worksheets/'+ws,'data-pdf':ws,target:'_blank',rel:'noopener'},'Open worksheet to print',c);H('a',{class:'btn ghost',href:'worksheets/'+an,'data-pdf':an,target:'_blank',rel:'noopener'},'Open answers',c);hideNoDL(card);fixLinks(card);}
 
 /* ================= explanations: why + goals + guide ================= */
 const INFO={
