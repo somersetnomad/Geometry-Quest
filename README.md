@@ -1,6 +1,8 @@
 # Geometry Quest
 
-An interactive geometry course for learners aged 9 to 18, built for home education. Sixteen worlds take you from a single point to infinite snowflakes, with hands-on labs, a guide character called Vertex, printable worksheets and progress tracking that needs no accounts.
+**Try it:** https://somersetnomad.github.io/Geometry-Quest/
+
+An interactive geometry course for learners aged 9 to 18, built for home education. Sixteen worlds take you from a single point to infinite snowflakes, with hands-on labs, a guide character you can design yourself, printable worksheets and progress tracking that needs no accounts.
 
 ## Features
 
@@ -53,7 +55,7 @@ It's a single HTML page with no build step and no dependencies to install.
 ```bash
 # serve the folder so the worksheet links work
 python3 -m http.server 8000
-# then open http://localhost:8000/geometry-quest.html
+# then open http://localhost:8000
 ```
 
 Opening the HTML file directly also works, but the worksheet links need the page to be served over HTTP.
@@ -63,14 +65,15 @@ The "Download" buttons for worksheets and summaries use a download feature of th
 ## Project structure
 
 ```
-geometry-quest.html      # the whole app: HTML, CSS and JavaScript
-worksheets/              # generated PDFs
-  w01-worksheet.pdf … w16-worksheet.pdf
-  w01-answers.pdf   … w16-answers.pdf
-  geometry-quest-worksheet-pack.pdf
-  geometry-quest-answer-pack.pdf
-make_worksheets.py       # generates every PDF in worksheets/
+index.html                          # the whole app: HTML, CSS and JavaScript
+w01-worksheet.pdf … w16-worksheet.pdf   # printable worksheets
+w01-answers.pdf   … w16-answers.pdf     # answer sheets
+geometry-quest-worksheet-pack.pdf   # all worksheets in one file
+geometry-quest-answer-pack.pdf      # all answer sheets in one file
+make_worksheets.py                  # generates every PDF
 ```
+
+The PDFs can sit next to `index.html` (as here) or in a `worksheets/` folder: the app checks both places.
 
 ### Regenerating the worksheets
 
@@ -79,7 +82,7 @@ pip install reportlab
 python3 make_worksheets.py
 ```
 
-The script uses DejaVu Sans fonts from `/usr/share/fonts/truetype/dejavu/`. Change the paths at the top of the script if your fonts live elsewhere.
+The script writes the PDFs into a `worksheets/` folder; move them next to `index.html` if you prefer. It uses DejaVu Sans fonts from `/usr/share/fonts/truetype/dejavu/`. Change the paths at the top of the script if your fonts live elsewhere.
 
 ## Technical notes
 
@@ -97,4 +100,4 @@ There are no accounts, no tracking and no server. Progress is saved only in the 
 
 Course content is adapted from the open textbook [*Geometry for Elementary School*](https://en.wikibooks.org/wiki/Geometry_for_Elementary_School) on Wikibooks, licensed under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). Adapted content in this project, including the worksheets, is shared under the same licence.
 
-Choose a separate licence for the code (MIT, for example) and add it as `LICENSE`.
+The code is released under the MIT licence (see `LICENSE`).
