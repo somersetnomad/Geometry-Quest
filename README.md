@@ -51,7 +51,7 @@ It's a single HTML page with no build step and no dependencies to install.
 ```bash
 # serve the folder so the worksheet links work
 python3 -m http.server 8000
-# then open http://localhost:8000/geometry-quest.html
+# then open http://localhost:8000
 ```
 
 Opening the HTML file directly also works, but the worksheet links need the page to be served over HTTP.
@@ -61,7 +61,7 @@ The "Download" buttons for worksheets and summaries use a download feature of th
 ## Project structure
 
 ```
-geometry-quest.html      # the whole app: HTML, CSS and JavaScript
+index.html               # the whole app: HTML, CSS and JavaScript
 worksheets/              # generated PDFs
   w01-worksheet.pdf … w16-worksheet.pdf
   w01-answers.pdf   … w16-answers.pdf
