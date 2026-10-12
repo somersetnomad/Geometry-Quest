@@ -48,7 +48,7 @@ a{color:inherit}
 .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--c1),var(--c3));transition:width .6s cubic-bezier(.2,.8,.2,1)}
 .xpnum,.starcount{font:700 13px var(--ff-mono);white-space:nowrap}
 .starcount b{color:var(--c3)}
-.icon-btn{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;font:700 13px var(--ff-body);cursor:pointer}
+.icon-btn{flex:none;white-space:nowrap;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;font:700 13px var(--ff-body);cursor:pointer}
 @media (max-width:560px){.bar,.xpnum{display:none}.logo span{font-size:17px}.hud{gap:10px}}
 
 /* Buttons */
@@ -303,6 +303,63 @@ table.rep{width:100%;border-collapse:collapse;font-size:15px;min-width:680px}
 .muted{color:var(--muted)} .small{font-size:13px;color:var(--muted);margin-top:8px}
 .banner .rm{width:clamp(90px,16vw,150px)}
 .curr{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:rgba(19,23,58,.12);border-radius:99px;padding:5px 12px;font:700 12px var(--ff-mono);letter-spacing:.04em}
+/* Explanations */
+.intro{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px}
+.intro-card{background:var(--card);border:2px solid var(--ink);border-radius:22px;padding:18px 20px;box-shadow:0 5px 0 var(--ink);display:grid;gap:10px;align-content:start}
+.intro-card.why{background:color-mix(in srgb,var(--wc) 14%,var(--card))}
+.checks,.uses,.helplist{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.checks li{position:relative;padding-left:34px;font-weight:700;line-height:1.35}
+.checks li::before{content:"";position:absolute;left:0;top:-1px;width:22px;height:22px;border-radius:7px;border:2px solid var(--ink);background:var(--card)}
+.checks li::after{content:"";position:absolute;left:7px;top:3px;width:6px;height:11px;border:solid var(--good);border-width:0 3px 3px 0;transform:rotate(45deg)}
+.uses li,.helplist li{position:relative;padding-left:22px;line-height:1.45}
+.uses li::before,.helplist li::before{content:"";position:absolute;left:2px;top:.5em;width:10px;height:10px;background:var(--wc,var(--c1));border:2px solid var(--ink);transform:rotate(45deg)}
+.helplist li::before{background:var(--c3)}
+.stepstrip{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr));gap:12px;counter-reset:ss}
+.stepstrip li{counter-increment:ss;background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:14px 16px 14px 56px;position:relative;display:grid;gap:2px;min-width:0}
+.stepstrip li::before{content:counter(ss);position:absolute;left:14px;top:14px;width:30px;height:30px;border-radius:50%;background:var(--ink);color:var(--paper);font:800 15px/30px var(--ff-mono);text-align:center}
+.stepstrip li b{font:800 17px/1.2 var(--ff-display)}
+.stepstrip li span{color:var(--muted);font-size:14px;line-height:1.35}
+.stepstrip li.go{cursor:pointer;transition:transform .15s,border-color .15s}
+.stepstrip li.go:hover,.stepstrip li.go:focus-visible{transform:translateY(-3px);border-color:var(--ink)}
+.whygrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:14px}
+.whycard{background:var(--card);border:2px solid var(--ink);border-radius:20px;padding:16px 18px;box-shadow:0 4px 0 var(--ink);display:grid;gap:6px;align-content:start}
+.whycard svg{width:40px;height:40px;fill:none;stroke:var(--c1);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.whycard:nth-child(3n+2) svg{stroke:var(--c2)}.whycard:nth-child(3n) svg{stroke:var(--c4)}
+.whycard svg .gf{fill:currentColor}
+.whycard h3{font-size:21px}
+.whycard p{color:var(--muted);font-size:15px}
+.helpsec p{max-width:70ch;line-height:1.6}
+.helpsec a{color:var(--c2);font-weight:700}
+.sec-head a{color:var(--c2);font-weight:700}
+.modal ol{margin:0;padding-left:22px;display:grid;gap:10px;line-height:1.45}
+/* Guide maker */
+.buddy-btn{flex:none;width:40px;height:40px;display:grid;place-items:center;border-radius:12px;border:1.5px solid var(--line);background:var(--card);padding:1px 3px;text-decoration:none}
+.buddy-btn:hover{border-color:var(--ink)}
+.bwrap{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:820px){.bwrap{grid-template-columns:1fr}}
+.bprev{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);background:var(--card);border:2px solid var(--ink);border-radius:26px;box-shadow:0 6px 0 var(--ink);padding:18px;display:grid;gap:14px;
+  background-image:radial-gradient(color-mix(in srgb,var(--ink) 10%,transparent) 1.4px,transparent 1.6px);background-size:18px 18px}
+@media (max-width:820px){.bprev{position:relative;top:0}}
+.bprev .big{width:min(230px,70%);margin:6px auto 0}
+.bsay{background:var(--ink);color:var(--paper);border-radius:18px;padding:12px 16px;display:grid;gap:2px}
+.bsay b{font:800 20px var(--ff-display)}
+.bsay span{opacity:.85;font-size:15px}
+.bopts{display:grid;gap:18px;min-width:0}
+.ogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}
+.otile{border:2px solid var(--line);background:var(--soft);border-radius:16px;padding:8px 6px 10px;display:grid;justify-items:center;gap:2px;cursor:pointer;font:700 13px var(--ff-body);color:var(--ink);transition:transform .15s cubic-bezier(.3,1.6,.5,1)}
+.otile:hover{transform:translateY(-2px);border-color:var(--ink)}
+.otile .mascot{width:66px}
+.otile.on{border-color:var(--ink);background:var(--card);box-shadow:0 4px 0 var(--ink)}
+.swatch{width:48px;height:48px;border-radius:50%;border:3px solid var(--line);cursor:pointer;padding:0}
+.swatch.on{border-color:var(--ink);box-shadow:0 0 0 3px var(--paper),0 0 0 6px var(--ink)}
+.dropzone{display:grid;gap:4px;justify-items:center;text-align:center;border:2.5px dashed var(--ink);border-radius:18px;padding:22px 16px;background:var(--soft);cursor:pointer;transition:background .15s,transform .15s}
+.dropzone:hover,.dropzone.over{background:color-mix(in srgb,var(--c3) 22%,var(--card));transform:translateY(-2px)}
+.dropzone:focus-within{outline:3px solid var(--c2);outline-offset:3px}
+.dropzone b{font:800 18px var(--ff-display)}
+.dropzone span{color:var(--muted);font-size:14px}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-weight:700;cursor:pointer}
+.toggle input{width:20px;height:20px;accent-color:var(--c1)}
 /* Cheat sheet */
 .ideas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px}
 .idea{background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:16px 18px;display:grid;gap:6px;align-content:start;min-width:0;transition:transform .2s,border-color .2s}
@@ -398,6 +455,8 @@ table.rep{width:100%;border-collapse:collapse;font-size:15px;min-width:680px}
     <div class="bar" aria-hidden="true"><i id="xpbar"></i></div>
     <span class="xpnum" id="xpnum">0 XP</span>
     <span class="starcount" id="starcount"></span>
+    <a class="buddy-btn" href="#buddy" id="hudBuddy" aria-label="Change your guide" title="Change your guide"></a>
+    <a class="icon-btn" href="#help" style="text-decoration:none">Help</a>
     <a class="icon-btn" href="#report" style="text-decoration:none">Report</a>
     <button class="icon-btn" id="snd" type="button">Sound on</button>
   </div>
@@ -448,37 +507,98 @@ function slider(parent,id,label,min,max,val,step,fn){const w=H('label',{class:'s
 function segmented(parent,items,cur,fn){const g=H('div',{class:'seg',role:'group'},null,parent);const bs=items.map(([k,l])=>{const b=H('button',{type:'button',class:k===cur?'on':''},l,g);b.onclick=()=>{bs.forEach(x=>x.classList.remove('on'));b.classList.add('on');fn(k);};return b;});return g;}
 function centerOf(el){const r=el.getBoundingClientRect();return [r.left+r.width/2,r.top+r.height/2];}
 
-/* ================= mascot: Vertex ================= */
-function mascot(mood='happy'){
-  const O='#13173A';
-  const pupil={happy:[0,1],cheer:[0,0],wow:[0,0],think:[3,-3],oops:[-2,2]}[mood]||[0,1];
+/* ================= mascot: your guide (customisable) ================= */
+const BUDDY_DEF={name:'Vertex',shape:'tri',color:'#FFC531',eyes:'round',acc:'none'};
+const B_COLORS=[['#FFC531','Sunshine'],['#FF6F9C','Bubblegum'],['#5E9BFF','Sky'],['#2ED3B0','Mint'],['#A98BFF','Lavender'],['#FF8A3D','Tangerine'],['#7BD957','Lime'],['#F2F4FF','Snow']];
+const B_SHAPES={tri:['Triangle',8,'M60 8Q67 8 71 16L110 92Q115 108 98 110H22Q5 108 10 92L49 16Q53 8 60 8Z'],
+  square:['Square',18,'M26 18H94Q108 18 108 32V96Q108 110 94 110H26Q12 110 12 96V32Q12 18 26 18Z'],
+  circle:['Circle',16,'M60 16A48 48 0 1 1 59.9 16Z'],
+  pent:['Pentagon',12,'M60 12L111 49L92 110H28L9 49Z'],
+  hex:['Hexagon',12,'M60 12L105 38V90L60 116L15 90V38Z'],
+  diamond:['Diamond',6,'M60 6L114 62L60 118L6 62Z']};
+const B_EYES=[['round','Round'],['big','Big'],['happy','Smiley'],['sleepy','Sleepy'],['cyclops','One eye']];
+const B_ACC=[['none','Nothing'],['grad','Grad cap'],['crown','Crown'],['wizard','Wizard hat'],['cap','Cap'],['bow','Bow'],['glasses','Glasses'],['phones','Headphones']];
+function buddy(){return Object.assign({},BUDDY_DEF,S.buddy||{});}
+const buddyName=()=>buddy().name||'Vertex';
+let CLIPN=0;
+function mascot(mood='happy',cfg){
+  const B=cfg||buddy();const O='#13173A';const sh=B_SHAPES[B.shape]||B_SHAPES.tri;const t=sh[1];
+  const pu={happy:[0,1],cheer:[0,0],wow:[0,0],think:[3,-3],oops:[-2,2]}[mood]||[0,1];
   const mouth={happy:`<path d="M49 84Q60 95 71 84" fill="none" stroke="${O}" stroke-width="4" stroke-linecap="round"/>`,
     cheer:`<path d="M46 81Q60 104 74 81Z" fill="${O}"/><path d="M53 92Q60 97 67 92" fill="#FF6F9C"/>`,
     wow:`<ellipse cx="60" cy="88" rx="6" ry="8" fill="${O}"/>`,
     think:`<path d="M51 88H69" stroke="${O}" stroke-width="4" stroke-linecap="round"/>`,
     oops:`<path d="M47 90Q53 84 59 90Q65 96 72 89" fill="none" stroke="${O}" stroke-width="4" stroke-linecap="round"/>`}[mood];
-  const arms=mood==='cheer'?`<path d="M24 82L8 58M96 82L112 58" stroke="${O}" stroke-width="5" stroke-linecap="round"/><circle cx="8" cy="56" r="5" fill="${O}"/><circle cx="112" cy="56" r="5" fill="${O}"/>`
-    :mood==='think'?`<path d="M24 86L12 96M96 84L84 72" stroke="${O}" stroke-width="5" stroke-linecap="round"/>`
-    :`<path d="M24 86L10 98M96 86L110 98" stroke="${O}" stroke-width="5" stroke-linecap="round"/>`;
-  const brows=mood==='think'?`<path d="M38 46L52 44M68 42L82 46" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/>`:mood==='oops'?`<path d="M38 44L52 48M68 48L82 44" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/>`:mood==='wow'?`<path d="M38 42Q45 37 52 42M68 42Q75 37 82 42" fill="none" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/>`:'';
-  const sweat=mood==='oops'?`<path d="M96 40Q100 48 96 52Q92 48 96 40Z" fill="#5EC8FF" stroke="${O}" stroke-width="2"/>`:'';
-  return `<svg class="mascot" viewBox="-6 -10 132 140" aria-hidden="true"><g class="mb">
-   <circle class="halo" cx="60" cy="6" r="9" fill="var(--c1)" opacity=".5"/>
-   <ellipse cx="44" cy="117" rx="11" ry="6" fill="${O}"/><ellipse cx="76" cy="117" rx="11" ry="6" fill="${O}"/>
+  const arms=mood==='cheer'?`<path d="M20 82L4 58M100 82L116 58" stroke="${O}" stroke-width="5" stroke-linecap="round"/><circle cx="4" cy="56" r="5" fill="${O}"/><circle cx="116" cy="56" r="5" fill="${O}"/>`
+    :mood==='think'?`<path d="M20 86L8 96M100 84L88 72" stroke="${O}" stroke-width="5" stroke-linecap="round"/>`
+    :`<path d="M20 86L6 98M100 86L114 98" stroke="${O}" stroke-width="5" stroke-linecap="round"/>`;
+  const brows=B.eyes==='cyclops'?'':mood==='think'?`<path d="M38 44L52 42M68 40L82 44" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/>`:mood==='oops'?`<path d="M38 42L52 46M68 46L82 42" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/>`:mood==='wow'?`<path d="M38 41Q45 36 52 41M68 41Q75 36 82 41" fill="none" stroke="${O}" stroke-width="3.5" stroke-linecap="round"/>`:'';
+  const sweat=mood==='oops'?`<path d="M98 36Q102 44 98 48Q94 44 98 36Z" fill="#5EC8FF" stroke="${O}" stroke-width="2"/>`:'';
+  let eyes;
+  if(B.eyes==='happy')eyes=`<path d="M35 65Q46 51 57 65M63 65Q74 51 85 65" fill="none" stroke="${O}" stroke-width="5" stroke-linecap="round"/>`;
+  else if(B.eyes==='cyclops')eyes=`<g class="me"><circle cx="60" cy="58" r="17" fill="#fff" stroke="${O}" stroke-width="3.5"/><circle cx="${60+pu[0]*1.5}" cy="${58+pu[1]*1.5}" r="8" fill="${O}"/><circle cx="${63+pu[0]}" cy="${55+pu[1]}" r="2.6" fill="#fff"/></g>`;
+  else{const r=B.eyes==='big'?14.5:12,pr=B.eyes==='big'?7.5:5.5;eyes=`<g class="me">${[46,74].map(x=>`<circle cx="${x}" cy="62" r="${r}" fill="#fff" stroke="${O}" stroke-width="3.5"/><circle cx="${x+pu[0]}" cy="${62+pu[1]}" r="${pr}" fill="${O}"/><circle cx="${x+2+pu[0]}" cy="${60+pu[1]}" r="1.9" fill="#fff"/>`).join('')}</g>`;
+    if(B.eyes==='sleepy')eyes+=`<path d="M33 61A13 13 0 0 1 59 61Z M61 61A13 13 0 0 1 87 61Z" fill="${B.color}" stroke="${O}" stroke-width="3.5" stroke-linejoin="round"/>`;}
+  const hat=['grad','crown','wizard','cap','bow'].includes(B.acc);
+  const acc={crown:`<path d="M42 ${t+5}L39 ${t-15}L50 ${t-5}L60 ${t-19}L70 ${t-5}L81 ${t-15}L78 ${t+5}Z" fill="#FFD23F" stroke="${O}" stroke-width="3" stroke-linejoin="round"/><circle cx="60" cy="${t-19}" r="3.2" fill="#FF5C93" stroke="${O}" stroke-width="2"/>`,
+    cap:`<path d="M38 ${t+7}Q38 ${t-17} 61 ${t-17}Q84 ${t-17} 84 ${t+7}Z" fill="#2F6BFF" stroke="${O}" stroke-width="3"/><path d="M80 ${t+4}Q100 ${t+1} 108 ${t+8}Q97 ${t+13} 80 ${t+9}Z" fill="#2F6BFF" stroke="${O}" stroke-width="3" stroke-linejoin="round"/><circle cx="61" cy="${t-17}" r="3" fill="${O}"/>`,
+    wizard:`<path d="M34 ${t+8}Q60 ${t+17} 86 ${t+8}L64 ${t-30}Q60 ${t-36} 56 ${t-30}Z" fill="#7C4DFF" stroke="${O}" stroke-width="3" stroke-linejoin="round"/><path d="M60 ${t-12}l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.6-4.8 2.6.9-5.4-3.9-3.8 5.4-.8Z" fill="#FFD23F"/>`,
+    grad:`<path d="M45 ${t+6}V${t-5}H75V${t+6}Z" fill="${O}"/><path d="M60 ${t-19}L95 ${t-8}L60 ${t+3}L25 ${t-8}Z" fill="${O}" stroke="${O}" stroke-width="2" stroke-linejoin="round"/><path d="M60 ${t-8}L89 ${t-4}V${t+12}" fill="none" stroke="#FFD23F" stroke-width="2.5"/><circle cx="89" cy="${t+14}" r="3.6" fill="#FFD23F"/>`,
+    bow:`<path d="M60 ${t+2}L41 ${t-10}V${t+14}Z M60 ${t+2}L79 ${t-10}V${t+14}Z" fill="#FF5C93" stroke="${O}" stroke-width="3" stroke-linejoin="round"/><circle cx="60" cy="${t+2}" r="5" fill="#FF5C93" stroke="${O}" stroke-width="3"/>`,
+    glasses:`<g fill="rgba(255,255,255,.2)" stroke="${O}" stroke-width="3.5"><circle cx="46" cy="62" r="16"/><circle cx="74" cy="62" r="16"/></g>`,
+    phones:`<path d="M12 66Q12 ${t-8} 60 ${t-8}Q108 ${t-8} 108 66" fill="none" stroke="${O}" stroke-width="6"/><rect x="2" y="54" width="17" height="28" rx="6" fill="#FF5C93" stroke="${O}" stroke-width="3"/><rect x="101" y="54" width="17" height="28" rx="6" fill="#FF5C93" stroke="${O}" stroke-width="3"/>`}[B.acc]||'';
+  let photo='';const face=!B.image||B.face;
+  if(B.image){const id='gqc'+(++CLIPN);const z=B.zoom||1;const w=112*z,h=116*z,cy=(t+116)/2;photo=`<defs><clipPath id="${id}"><path d="${sh[2]}"/></clipPath></defs><image href="${B.image}" x="${(60-w/2).toFixed(1)}" y="${(cy-h/2).toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" preserveAspectRatio="xMidYMid slice" clip-path="url(#${id})"/><path d="${sh[2]}" fill="none" stroke="${O}" stroke-width="5" stroke-linejoin="round"/>`;}
+  const shine=B.image?'':B.shape==='tri'?`<path d="M60 22L22 98" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".35"/>`:`<path d="M30 ${t+22}Q24 ${t+40} 26 ${t+58}" stroke="#fff" stroke-width="6" stroke-linecap="round" fill="none" opacity=".35"/>`;
+  return `<svg class="mascot" viewBox="-8 -26 136 156" aria-hidden="true"><g class="mb">
+   ${hat?'':`<circle class="halo" cx="60" cy="${t}" r="9" fill="var(--c1)" opacity=".5"/>`}
+   <ellipse cx="44" cy="119" rx="11" ry="6" fill="${O}"/><ellipse cx="76" cy="119" rx="11" ry="6" fill="${O}"/>
    ${arms}
-   <path d="M60 8Q67 8 71 16L110 92Q115 108 98 110H22Q5 108 10 92L49 16Q53 8 60 8Z" fill="#FFC531" stroke="${O}" stroke-width="5" stroke-linejoin="round"/>
-   <path d="M60 22L22 98" stroke="#FFE08A" stroke-width="6" stroke-linecap="round" opacity=".8"/>
-   <circle cx="60" cy="8" r="6" fill="var(--c1)" stroke="${O}" stroke-width="3"/>
-   <ellipse cx="36" cy="86" rx="7" ry="4.5" fill="#FF6F9C" opacity=".55"/><ellipse cx="84" cy="86" rx="7" ry="4.5" fill="#FF6F9C" opacity=".55"/>
-   ${brows}
-   <g class="me"><circle cx="46" cy="62" r="12" fill="#fff" stroke="${O}" stroke-width="3.5"/><circle cx="74" cy="62" r="12" fill="#fff" stroke="${O}" stroke-width="3.5"/>
-   <circle cx="${46+pupil[0]}" cy="${62+pupil[1]}" r="5.5" fill="${O}"/><circle cx="${74+pupil[0]}" cy="${62+pupil[1]}" r="5.5" fill="${O}"/>
-   <circle cx="${48+pupil[0]}" cy="${60+pupil[1]}" r="1.8" fill="#fff"/><circle cx="${76+pupil[0]}" cy="${60+pupil[1]}" r="1.8" fill="#fff"/></g>
-   ${mouth}${sweat}</g></svg>`;}
+   <path d="${sh[2]}" fill="${B.color}" stroke="${O}" stroke-width="5" stroke-linejoin="round"/>${photo}${shine}
+   ${hat?'':`<circle cx="60" cy="${t}" r="6" fill="var(--c1)" stroke="${O}" stroke-width="3"/>`}
+   ${face?`<ellipse cx="36" cy="86" rx="7" ry="4.5" fill="#FF6F9C" opacity=".55"/><ellipse cx="84" cy="86" rx="7" ry="4.5" fill="#FF6F9C" opacity=".55"/>${brows}${eyes}${mouth}`:''}${sweat}${acc}</g></svg>`;}
+function loadPic(file,after){if(!file||!/^image\//.test(file.type)){toast('Please choose a picture file (JPG or PNG).');return;}
+  const url=URL.createObjectURL(file);const img=new Image();
+  img.onload=()=>{const N=260,c=document.createElement('canvas');c.width=c.height=N;const x=c.getContext('2d');x.fillStyle=buddy().color;x.fillRect(0,0,N,N);const k=Math.max(N/img.width,N/img.height),w=img.width*k,h=img.height*k;x.drawImage(img,(N-w)/2,(N-h)/2,w,h);URL.revokeObjectURL(url);
+    const data=c.toDataURL('image/jpeg',.85);S.buddy=Object.assign(buddy(),{image:data,zoom:1});let ok=true;try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){ok=false;}
+    toast(ok?'Picture added to your guide':'Picture added, but this browser can’t save it. It will reset when you close the page.');sfx('win');updateHUD();route();};
+  img.onerror=()=>{URL.revokeObjectURL(url);toast('Couldn’t read that picture. Try a JPG or PNG.');};img.src=url;}
+function renderBuddy(app){
+  const wrap=H('div',{class:'world'},null,app);H('a',{href:'#',class:'back'},'← Back to the map',wrap);
+  H('header',{class:'banner',style:'--wc:var(--c1)'},`<div><div class="wnum"><span>Your guide</span></div><h1>Make your guide</h1><p class="w-tag">Pick a shape, a colour, eyes and something to wear. Your guide goes with you through every world.</p></div>`,wrap);
+  const grid=H('div',{class:'bwrap'},null,wrap);const prev=H('div',{class:'bprev'},null,grid);const opts=H('div',{class:'bopts'},null,grid);let mood='happy';
+  const set=(k,v)=>{S.buddy=Object.assign(buddy(),{[k]:v});save();draw();updateHUD();sfx('pop');};
+  function tile(group,k,val,label,cfg){const on=buddy()[k]===val;const b=H('button',{type:'button',class:'otile'+(on?' on':''),'aria-pressed':String(on)},`${mascot('happy',cfg)}<span>${label}</span>`,group);b.onclick=()=>set(k,val);}
+  function draw(){const B=buddy();
+    prev.innerHTML=`<div class="big">${mascot(mood)}</div><div class="bsay"><b>${B.name||'Vertex'}</b><span>Hi${S.name?' '+S.name:''}! I’m ${B.name||'Vertex'}, a ${B_SHAPES[B.shape][0].toLowerCase()}. Let’s learn some geometry!</span></div><div class="chips" id="moods"></div><div class="controls" id="bact"></div>`;
+    const mc=$('#moods',prev);[['happy','Happy'],['cheer','Cheering'],['wow','Amazed'],['think','Thinking'],['oops','Oops']].forEach(([m,l])=>{const b=H('button',{type:'button',class:'chip-btn'},l,mc);if(m===mood)b.style.borderColor='var(--ink)';b.onclick=()=>{mood=m;draw();};});
+    const ac=$('#bact',prev);btn(ac,'Surprise me',()=>{S.buddy=Object.assign(buddy(),{shape:pick(Object.keys(B_SHAPES)),color:pick(B_COLORS)[0],eyes:pick(B_EYES)[0],acc:pick(B_ACC)[0]});save();draw();updateHUD();burst(...centerOf($('.big',prev)),40);sfx('win');},'primary');
+    btn(ac,'Back to Vertex',()=>{S.buddy=Object.assign({},BUDDY_DEF);save();draw();updateHUD();},'ghost');
+    opts.innerHTML='';
+    const sec=(title,sub)=>{const s=H('section',{class:'lab'},`<div class="lab-head"><div><h3>${title}</h3>${sub?`<p>${sub}</p>`:''}</div></div>`,opts);return s;};
+    const pic=sec('Use your own picture','Draw a guide on paper and take a photo, or pick any picture. It fills your chosen shape.');
+    const drop=H('label',{class:'dropzone',for:'buddy-file'},`<input type="file" id="buddy-file" accept="image/*" class="vh"><b>${B.image?'Choose a different picture':'Choose a picture'}</b><span>or drag one here. JPG or PNG works best.</span>`,pic);
+    const fi=$('#buddy-file',drop);fi.onchange=()=>loadPic(fi.files[0]);
+    ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,()=>drop.classList.remove('over')));
+    drop.addEventListener('drop',e=>{e.preventDefault();const f=e.dataTransfer&&e.dataTransfer.files[0];if(f)loadPic(f);});
+    if(B.image){const pc=H('div',{class:'controls'},null,pic);slider(pc,'buddy-zoom','Zoom',1,2.5,B.zoom||1,0.1,v=>{S.buddy=Object.assign(buddy(),{zoom:v});save();$('.big',prev).innerHTML=mascot(mood);updateHUD();});
+      const tg=H('label',{class:'toggle',for:'buddy-face'},`<input type="checkbox" id="buddy-face" ${B.face?'checked':''}><span>Draw a face on top</span>`,pc);$('#buddy-face',tg).onchange=e=>set('face',e.target.checked);
+      btn(pc,'Remove picture',()=>{const nb=buddy();delete nb.image;delete nb.zoom;delete nb.face;S.buddy=nb;save();draw();updateHUD();},'ghost');}
+    H('p',{class:'small'},'Your picture stays on this device. Nothing is uploaded or shared.',pic);
+    const n=sec('Name','Up to 16 letters.');const row=H('div',{class:'numrow'},null,n);const inp=H('input',{type:'text',id:'buddy-name',maxlength:'16',value:B.name,autocomplete:'off','aria-label':'Guide name',style:'font-size:22px;width:min(100%,320px)'},null,row);
+    inp.addEventListener('change',()=>{const v=inp.value.trim().slice(0,16);S.buddy=Object.assign(buddy(),{name:v||'Vertex'});save();draw();updateHUD();toast(`Your guide is called <b>${buddyName()}</b>`);});
+    const s1=sec('Shape','Every guide is a geometry shape.');const g1=H('div',{class:'ogrid'},null,s1);Object.entries(B_SHAPES).forEach(([k,v])=>tile(g1,'shape',k,v[0],Object.assign({},B,{shape:k})));
+    const s2=sec('Colour');const g2=H('div',{class:'chips'},null,s2);B_COLORS.forEach(([c,l])=>{const b=H('button',{type:'button',class:'swatch'+(B.color===c?' on':''),'aria-label':l,title:l,style:`background:${c}`},'',g2);b.onclick=()=>set('color',c);});
+    const s3=sec('Eyes',B.image&&!B.face?'Turn on “Draw a face on top” to add these to your picture.':'');const g3=H('div',{class:'ogrid'},null,s3);B_EYES.forEach(([k,l])=>tile(g3,'eyes',k,l,Object.assign({},B,{eyes:k})));
+    const s4=sec('Something to wear');const g4=H('div',{class:'ogrid'},null,s4);B_ACC.forEach(([k,l])=>tile(g4,'acc',k,l,Object.assign({},B,{acc:k})));
+    const d=sec('All done?');const dc=H('div',{class:'controls'},null,d);H('a',{class:'btn primary',href:'#'},'Back to the map →',dc);}
+  draw();
+}
+
 function wordify(t){return t.split(' ').map((w,i)=>`<span class="w" style="animation-delay:${i*35}ms">${w}</span>`).join(' ');}
 function guide(parent,lines,endFn){
   const w=H('div',{class:'guide'},null,parent);const m=H('div',{},mascot('wow'),w);const b=H('div',{class:'bubble'},null,w);let i=0;
-  function show(){b.innerHTML=`<span class="g-name">Vertex says</span><p class="g-text">${wordify(lines[i].replace('{name}',S.name||'friend'))}</p><div class="g-foot"><span class="g-dots">${lines.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join('')}</span><span class="g-act"></span></div>`;
+  function show(){b.innerHTML=`<span class="g-name">${buddyName()} says</span><p class="g-text">${wordify(lines[i].replace('{name}',S.name||'friend'))}</p><div class="g-foot"><span class="g-dots">${lines.map((_,k)=>`<i class="${k===i?'on':''}"></i>`).join('')}</span><span class="g-act"></span></div>`;
     const act=$('.g-act',b);if(i<lines.length-1){btn(act,'Next →',()=>{i++;show();},'primary');}else if(endFn){endFn(act);}
     m.innerHTML=mascot(i===0?'wow':i===lines.length-1?'cheer':'happy');}
   show();return {mood:md=>m.innerHTML=mascot(md)};}
@@ -492,7 +612,7 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
 const RANKS=[[0,'Dot'],[50,'Segment'],[120,'Ray'],[220,'Angle Ace'],[340,'Shape Shifter'],[480,'Compass Wizard'],[640,"Euclid's Rival"]];
 const rankIdx=()=>{let i=0;RANKS.forEach((r,k)=>{if(S.xp>=r[0])i=k;});return i;};
 const totalStars=()=>Object.values(S.stars).reduce((a,b)=>a+b,0);
-function updateHUD(){const i=rankIdx(),cur=RANKS[i][0],nxt=RANKS[i+1]?RANKS[i+1][0]:cur+200;
+function updateHUD(){const hb=$('#hudBuddy');if(hb)hb.innerHTML=mascot('happy');const i=rankIdx(),cur=RANKS[i][0],nxt=RANKS[i+1]?RANKS[i+1][0]:cur+200;
   $('#rank').textContent=RANKS[i][1];$('#xpbar').style.width=clamp((S.xp-cur)/(nxt-cur)*100,3,100)+'%';$('#xpnum').textContent=S.xp+' XP';
   $('#starcount').innerHTML=`<b>★</b> ${totalStars()}/${WORLDS.length*3}`;$('#snd').textContent=S.sound?'Sound on':'Sound off';$('#snd').setAttribute('aria-pressed',String(S.sound));}
 function addXP(n,x,y){if(!n)return;const before=rankIdx();S.xp+=n;save();updateHUD();
@@ -1219,7 +1339,7 @@ const LOCK='<svg viewBox="0 0 40 40" aria-hidden="true" fill="none"><rect x="9" 
 const unlocked=i=>S.explore||i===0||(S.stars[WORLDS[i-1].id]||0)>0;
 function currentWorld(){const n=WORLDS.findIndex(w=>!(S.stars[w.id]>0));return n<0?WORLDS.length-1:n;}
 function renderHome(app){
-  const ni=currentWorld();const started=Object.keys(S.stars).length>0;const hi=S.name?`Welcome back, ${S.name}!`:'Hi! I’m Vertex. Let’s go!';
+  const ni=currentWorld();const started=Object.keys(S.stars).length>0;const hi=S.name?`Welcome back, ${S.name}!`:`Hi! I’m ${buddyName()}. Let’s go!`;
   H('section',{class:'hero'},`
    <div>
      <span class="eyebrow">A geometry adventure for ages 9 to 18</span>
@@ -1248,6 +1368,7 @@ function renderHome(app){
      <svg class="float f1" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 4L36 34H4Z" fill="var(--c3)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/></svg>
      <svg class="float f2" viewBox="0 0 40 40" aria-hidden="true"><path d="M20 3L35 12V28L20 37L5 28V12Z" fill="var(--c5)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/></svg>
    </div>`,app);
+  whyHome(app);
   const map=H('section',{class:'section'},`<div class="sec-head"><div><span class="eyebrow">Your quest</span><h2>The map</h2></div><p>Earn at least one star to unlock the next world. ${totalStars()}/${WORLDS.length*3} stars collected.</p></div>`,app);
   const ex=H('div',{class:'controls',style:'margin:-8px 0 18px'},null,map);
   btn(ex,S.explore?'Explore mode: on (all unlocked)':'Explore mode: unlock all worlds',()=>{S.explore=!S.explore;save();route();},S.explore?'on':'');
@@ -1276,9 +1397,10 @@ function renderWorld(app,wi){
   H('a',{href:'#',class:'back'},'← Back to the map',wrap);
   H('header',{class:'banner'},`<div><div class="wnum"><span>World ${wi+1} of ${WORLDS.length}</span><span class="stars">${starStr(S.stars[W.id]||0)}</span></div><h1>${W.name}</h1><p class="w-tag">${W.tag}</p><span class="curr">Curriculum: ${W.curr}</span></div><svg class="art" viewBox="0 0 40 40" aria-hidden="true">${GLYPH[W.id]}</svg>`,wrap);
   guide(wrap,W.say,act=>btn(act,'Let’s play ↓',()=>document.getElementById(pid+'-labs').scrollIntoView({behavior:RM?'auto':'smooth'}),'primary'));
-  H('div',{class:'sec-title',id:pid+'-labs'},`<h2>Play with it</h2><span>Drag anything that glows.</span>`,wrap);
+  worldIntro(wrap,W,pid);
+  H('div',{class:'sec-title',id:pid+'-labs'},`<h2>Play with it</h2><span>Drag the glowing dots, move the sliders, press the buttons. Read the grey box to see what’s happening.</span>`,wrap);
   const labs=H('div',{class:'labs'},null,wrap);W.labs.forEach(fn=>fn(labs,pid));
-  H('div',{class:'sec-title'},`<h2>Cheat sheet</h2><span>Screenshot this.</span>`,wrap);
+  H('div',{class:'sec-title',id:pid+'-sheet'},`<h2>Cheat sheet</h2><span>The key facts. Screenshot this.</span>`,wrap);
   const ideas=H('div',{class:'ideas'},null,wrap);W.ideas.forEach(([t,d])=>H('div',{class:'idea'},`<span class="k" aria-hidden="true"></span><h3>${t}</h3><p>${d}</p>`,ideas));
   worksheetCard(wrap,wi);
   quizBlock(wrap,wi);
@@ -1382,20 +1504,66 @@ function renderReport(app){
   hideNoDL(wrap);
 }
 function worksheetCard(wrap,wi){const W=WORLDS[wi];const n=String(wi+1).padStart(2,'0');const ws=`worksheets/w${n}-worksheet.pdf`,an=`worksheets/w${n}-answers.pdf`;
-  const card=H('section',{class:'lab print'},`<div class="print-grid"><div>${mascot('happy')}</div><div><span class="eyebrow">Print and practise</span><h3>World ${wi+1} worksheet</h3><p class="muted">Pencil-and-paper practice: drawing, measuring and real-life tasks. The answer sheet is separate, for the grown-up.${W.id==='solids'?' Includes a cut-out dice net to fold and glue.':''}</p><div class="controls" style="margin-top:12px"></div><p class="small">Print at 100% (“actual size”) so the measuring questions work with a real ruler and protractor.</p></div></div>`,wrap);
+  const card=H('section',{class:'lab print',id:'w'+(wi+1)+'-print'},`<div class="print-grid"><div>${mascot('happy')}</div><div><span class="eyebrow">Print and practise</span><h3>World ${wi+1} worksheet</h3><p class="muted">Pencil-and-paper practice: drawing, measuring and real-life tasks. The answer sheet is separate, for the grown-up.${W.id==='solids'?' Includes a cut-out dice net to fold and glue.':''}</p><div class="controls" style="margin-top:12px"></div><p class="small">Print at 100% (“actual size”) so the measuring questions work with a real ruler and protractor.</p></div></div>`,wrap);
   const c=$('.controls',card);btn(c,'Download worksheet',()=>saveFile(`Geometry Quest World ${wi+1} worksheet.pdf`,ws,true),'primary needs-dl');btn(c,'Download answers',()=>saveFile(`Geometry Quest World ${wi+1} answers.pdf`,an,true),'needs-dl');
   H('a',{class:'btn ghost',href:ws,target:'_blank',rel:'noopener'},'Open worksheet to print',c);H('a',{class:'btn ghost',href:an,target:'_blank',rel:'noopener'},'Open answers',c);hideNoDL(card);}
 
+/* ================= explanations: why + goals + guide ================= */
+const INFO={
+ points:{goals:['Tell a point, a segment, a ray and a line apart','Spot points that are collinear','Write a segment as AB with a bar on top'],why:[['Game designers','place every character and wall using points and lines.'],['Architects','start every building plan with straight lines.'],['Maps and GPS','mark every place as a single point.']]},
+ angles:{goals:['Name acute, right, obtuse, straight and reflex angles','Estimate an angle in degrees','Use pairs that make 90° and 180°'],why:[['Skaters and divers','are scored on how far they turn: 180, 360, 540.'],['Pilots and sailors','steer by angles called bearings.'],['Snooker and football players','aim by judging angles.']]},
+ protractor:{goals:['Place a protractor on an angle correctly','Choose the right scale every time','Measure and draw angles to the nearest degree'],why:[['Carpenters','cut joints at exact angles so furniture fits.'],['Surveyors and engineers','measure angles on building sites.'],['Designers','draw logos and icons to exact angles.']]},
+ rules:{goals:['Use angles on a straight line = 180°','Use angles around a point = 360°','Use vertically opposite angles'],why:[['Road designers','plan junctions with these rules.'],['Robot arms and cranes','swing on pivots, just like scissors.'],['Puzzle solvers','use them to find any missing angle.']]},
+ triangles:{goals:['Sort triangles by their sides and angles','Explain why the angles add up to 180°','Find area = ½ × base × height'],why:[['Bridges, cranes and roofs','use triangles because they don’t bend.'],['3D video games','draw every object from tiny triangles.'],['Surveyors','measure land by splitting it into triangles.']]},
+ polygons:{goals:['Name polygons with up to 12 sides','Work out the angle total of any polygon','Sort quadrilaterals into families'],why:[['Tilers','choose shapes that fit together with no gaps.'],['Coin and road-sign designers','use shapes you can recognise by touch or at a glance.'],['Bees and chemists','both build with hexagons.']]},
+ circles:{goals:['Name radius, diameter and chord','Find circumference = π × diameter','Find area = π × radius²'],why:[['Bike and car makers','use circumference to measure speed and distance.'],['Pizza shops','price by size: area tells you how much you get.'],['Engineers','design wheels, gears and pipes.']]},
+ solids:{goals:['Count faces, edges and vertices','Match a flat net to its 3D shape','Check shapes with Euler’s rule'],why:[['Packaging designers','make every box from a flat net.'],['3D printing and game modelling','start with solid shapes.'],['Architects','plan buildings as 3D shapes.']]},
+ parallel:{goals:['Spot parallel lines and a transversal','Use corresponding, alternate and co-interior angles','Find all eight angles from one'],why:[['Railway engineers','must keep rails parallel or trains fall off.'],['Builders','use parallel lines for shelves, stairs and brick rows.'],['Artists','use parallel lines to draw depth and perspective.']]},
+ symmetry:{goals:['Find every line of symmetry','Find the order of rotational symmetry','Complete a symmetrical pattern'],why:[['Logo designers','use symmetry so brands look balanced.'],['Nature','builds snowflakes, flowers and faces symmetrically.'],['Engineers','balance wheels and fan blades so they don’t wobble.']]},
+ coords:{goals:['Read and plot points in all four quadrants','Always go across (x) before up (y)','Use coordinates to find a missing corner'],why:[['Every screen','gives each pixel a coordinate.'],['Maps and GPS','use grid references to find places.'],['Games and spreadsheets','from Battleships to Minecraft, use grids.']]},
+ transform:{goals:['Translate, reflect and rotate a shape','Describe a transformation fully','Use the coordinate rules'],why:[['Animators and game coders','move characters with these three moves.'],['Pattern designers','repeat shapes to make wallpaper and tiles.'],['Robots and machines','follow slide-and-turn instructions.']]},
+ constructions:{goals:['Construct an equilateral triangle','Decide if three lengths can make a triangle','Cut a line exactly in half with a compass'],why:[['Engineers and draughtspeople','draw precise plans.'],['Design software (CAD)','uses the same ideas.'],['Your brain','learns to build an argument step by step, which is what a proof is.']]},
+ congruence:{goals:['Recognise congruent shapes','Use SSS, SAS, ASA, AAS and RHS','Know when information isn’t enough'],why:[['Factories','make thousands of identical parts.'],['Engineers','prove a structure is rigid.'],['Quality checkers','test that copies match the original.']]},
+ pythagoras:{goals:['Use a² + b² = c²','Find any missing side of a right triangle','Explain what an irrational number is'],why:[['Builders','check a corner is square with 3, 4 and 5 metres.'],['Screen sizes, ladders and shortcuts','are all worked out with it.'],['Sat navs and games','calculate distances with it millions of times a second.']]},
+ fractals:{goals:['Describe self-similarity','Build Koch and Cantor patterns','Explain how an edge can be infinite while the area is not'],why:[['Film studios','generate mountains, trees and clouds with fractals.'],['Phone antennas','use fractal shapes to pick up more signals.'],['Scientists','model coastlines, lungs and lightning.']]}};
+const WHY_HOME=[['Build things','Every house, bridge and phone starts as a geometry drawing. Triangles keep cranes standing.','triangles'],['Make games and films','3D games, animation and special effects are geometry: points, angles and transformations.','transform'],['Find your way','Maps, GPS and sat navs work out where you are with coordinates and triangles.','coords'],['Play better','Snooker, skating, football and darts are all about angles.','angles'],['Design and art','Logos, patterns, tiles and perspective drawing all use symmetry and shapes.','symmetry'],['Think clearly','Geometry teaches you to prove things step by step. That skill works everywhere.','constructions']];
+const STEPS=[['Meet the world','Your guide explains where you’ve already seen it.'],['Play the labs','Drag, slide and tap. Nothing can break.'],['Read the cheat sheet','The key facts on one screen.'],['Print the worksheet','Practise on paper. Answers are separate.'],['Take the challenge','5 questions. Earn up to 3 stars.']];
+function stepStrip(parent,pid){const g=H('ol',{class:'stepstrip'},STEPS.map(([t,d],i)=>`<li><b>${t}</b><span>${d}</span></li>`).join(''),parent);
+  if(pid){const ids=[null,pid+'-labs',pid+'-sheet',pid+'-print','challenge'];[...g.children].forEach((li,i)=>{if(!ids[i])return;li.tabIndex=0;li.classList.add('go');const jump=()=>{const t=document.getElementById(ids[i]);if(t)t.scrollIntoView({behavior:RM?'auto':'smooth'});};li.onclick=jump;li.onkeydown=e=>{if(e.key==='Enter')jump();};});}return g;}
+function worldIntro(wrap,W,pid){const I=INFO[W.id];if(!I)return;
+  const s=H('section',{class:'intro'},null,wrap);
+  H('div',{class:'intro-card'},`<span class="eyebrow">By the end you can</span><ul class="checks">${I.goals.map(g=>`<li>${g}</li>`).join('')}</ul>`,s);
+  H('div',{class:'intro-card why'},`<span class="eyebrow">Why it matters</span><ul class="uses">${I.why.map(([a,b])=>`<li><b>${a}</b> ${b}</li>`).join('')}</ul>`,s);
+  H('div',{class:'sec-title'},`<h2>How this page works</h2><span>Tap a step to jump to it.</span>`,wrap);stepStrip(wrap,pid);}
+function whyHome(app){const sec=H('section',{class:'section'},`<div class="sec-head"><div><span class="eyebrow">Why learn this?</span><h2>Geometry is everywhere</h2></div><p>Geometry is the maths of shape, size, position and movement. It’s how people design, build, navigate and create.</p></div>`,app);
+  H('div',{class:'whygrid'},WHY_HOME.map(([t,d,g])=>`<div class="whycard"><svg viewBox="0 0 40 40" aria-hidden="true">${GLYPH[g]}</svg><h3>${t}</h3><p>${d}</p></div>`).join(''),sec);
+  const how=H('section',{class:'section'},`<div class="sec-head"><div><span class="eyebrow">How it works</span><h2>Every world, five steps</h2></div><p>New here? The <a href="#help">Start here guide</a> explains everything for learners and grown-ups.</p></div>`,app);stepStrip(how);}
+function renderHelp(app){
+  const wrap=H('div',{class:'world'},null,app);H('a',{href:'#',class:'back'},'← Back to the map',wrap);
+  H('header',{class:'banner',style:'--wc:var(--c3)'},`<div><div class="wnum"><span>Start here</span></div><h1>How Geometry Quest works</h1><p class="w-tag">What this is, why it matters, and how to use it.</p></div><div class="rm">${mascot('happy')}</div>`,wrap);
+  const t=(h,body,id)=>H('section',{class:'lab helpsec',id:id||''},`<div class="lab-head"><div><h3>${h}</h3></div></div>${body}`,wrap);
+  t('What is this?',`<p>Geometry Quest is a course in <b>geometry</b>: the maths of shapes, angles, sizes, positions and movement. There are 16 worlds. They start with the simplest idea, a single point, and build up step by step to Pythagoras and fractals. Each world takes about 30 to 60 minutes.</p>`);
+  t('Why learn geometry?',`<p>You use geometry every day without noticing: judging a gap to cross the road, packing a bag, aiming a ball. People who design, build and create use it all the time.</p><div class="whygrid" style="margin-top:14px">${WHY_HOME.map(([a,d,g])=>`<div class="whycard"><svg viewBox="0 0 40 40" aria-hidden="true">${GLYPH[g]}</svg><h3>${a}</h3><p>${d}</p></div>`).join('')}</div><p style="margin-top:14px">It’s also in every maths exam, from SATs to GCSE, and it trains careful, step-by-step thinking.</p>`);
+  const hw=t('How each world works',`<p>Every world follows the same five steps, so you always know what comes next.</p>`);stepStrip(hw);
+  t('How to use the labs',`<ul class="helplist"><li><b>Glowing pink or blue dots</b> are handles. Press and drag them.</li><li><b>Sliders</b> change a number. Drag them left and right.</li><li><b>Buttons</b> start animations or games. Try them all: nothing can break.</li><li>The <b>grey box under each lab</b> explains what you’re seeing as you change things.</li><li>On a keyboard, press Tab to reach a handle, then use the arrow keys.</li></ul>`);
+  t('Stars, XP and badges',`<ul class="helplist"><li><b>Stars:</b> each challenge has 5 questions. 5 right = 3 stars, 4 = 2 stars, 3 = 1 star. Try again as often as you like: your best counts.</li><li><b>Unlocking:</b> earn at least 1 star to unlock the next world. Grown-ups can switch on <b>Explore mode</b> on the map to open everything.</li><li><b>XP</b> comes from right answers and games, and raises your rank from Dot to Euclid’s Rival.</li><li><b>Badges</b> are hidden around the labs. Explore to find them.</li><li><b>Your guide:</b> tap the little face at the top of the screen to design your own guide, or change it any time.</li></ul>`);
+  t('For parents and carers',`<ul class="helplist"><li><b>Suggested rhythm:</b> one world a week. Day 1: the guide’s intro and the labs. Day 2: the worksheet. Day 3: the challenge and the cheat sheet.</li><li><b>Ages:</b> worlds 1 to 12 suit most 9 to 11-year-olds. Worlds 13 to 15 are secondary level (KS3 to GCSE). World 16 is enrichment for anyone curious.</li><li><b>Worksheets:</b> each world has one, plus a separate answer sheet. Print at 100% (“actual size”) so measuring works with a real ruler and protractor.</li><li><b>Progress:</b> the <a href="#report">Report</a> page shows stars, scores and dates for each world, a summary for your records, and a <b>progress code</b> you can type on another device to carry on there.</li><li><b>Privacy:</b> no accounts and no tracking. Progress stays in this browser.</li></ul>`);
+  t('Stuck?',`<ul class="helplist"><li><b>Don’t understand a lab?</b> Read the grey box under it, then try the example buttons.</li><li><b>Got a question wrong?</b> The explanation shows the trick. Play the matching lab again, then retry.</li><li><b>Progress gone?</b> Clearing browser data erases it. Use the progress code on the Report page to bring it back.</li><li><b>Too noisy?</b> Turn the sound off with the button at the top.</li></ul><div class="controls" style="margin-top:14px"><a class="btn primary" href="#w1">Start World 1 →</a><a class="btn" href="#">See the map</a></div>`);
+}
+
 function onboard(){
   const back=H('div',{class:'modal-back',role:'dialog','aria-modal':'true','aria-labelledby':'ob-t'},null,document.body);
-  const m=H('div',{class:'modal'},`<div class="mm">${mascot('cheer')}</div><h2 id="ob-t">Hi! I’m Vertex.</h2><p>I’m a triangle, and I’ll be your guide through 16 worlds of shapes, spins and secrets. What should I call you?</p>`,back);
+  const m=H('div',{class:'modal'},`<div class="mm">${mascot('cheer')}</div><h2 id="ob-t">Hi! I’m ${buddyName()}.</h2><p>I’ll be your guide through 16 worlds of shapes, spins and secrets. What should I call you?</p>`,back);
   const inp=H('input',{type:'text',id:'ob-name',maxlength:'20',placeholder:'Your first name or a nickname',autocomplete:'off'},null,m);const c=H('div',{class:'controls'},null,m);
-  const go=()=>{S.name=inp.value.trim().slice(0,20);S.seen=true;save();back.remove();burst(innerWidth/2,innerHeight/3,90);sfx('win');route();};
+  const go=()=>{S.name=inp.value.trim().slice(0,20);S.seen=true;save();route();burst(innerWidth/2,innerHeight/3,90);sfx('win');plan();};
+  const plan=()=>{m.innerHTML=`<div class="mm">${mascot('happy')}</div><h2>Here’s the plan${S.name?', '+S.name:''}!</h2><ol><li><b>What?</b> Geometry is the maths of shapes, angles, sizes and movement.</li><li><b>Why?</b> Builders, game designers, pilots, artists and sports stars use it every day. It’s in every maths exam too.</li><li><b>How?</b> 16 worlds. In each one: meet the idea, play the labs, practise on paper, then take a 5-question challenge for stars.</li><li><b>Stuck?</b> Tap <b>Help</b> at the top any time.</li><li><b>Your guide:</b> tap the little face at the top to redesign me: shape, colour, eyes and hats.</li></ol><div class="controls"></div>`;
+    const c2=$('.controls',m);H('a',{class:'btn primary big',href:'#w1'},'Start World 1 →',c2).addEventListener('click',()=>back.remove());H('a',{class:'btn',href:'#buddy'},'Design my own guide',c2).addEventListener('click',()=>back.remove());btn(c2,'Show me the map',()=>back.remove(),'ghost');};
   btn(c,'Let’s go!',go,'primary big');btn(c,'Skip',()=>{S.seen=true;save();back.remove();},'ghost');inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go();}});setTimeout(()=>inp.focus(),100);
 }
 function route(){const h=location.hash.slice(1);const app=$('#app');app.innerHTML='';window.scrollTo(0,0);const v=H('div',{class:'view'},null,app);
   if(/^w\d+$/.test(h)){const i=+h.slice(1)-1;if(WORLDS[i])return renderWorld(v,i);}
-  if(h==='boss')return renderBoss(v);if(h==='report')return renderReport(v);renderHome(v);}
+  if(h==='buddy')return renderBuddy(v);
+  if(h==='boss')return renderBoss(v);if(h==='report')return renderReport(v);if(h==='help')return renderHelp(v);renderHome(v);}
 addEventListener('hashchange',route);
 updateHUD();route();if(!S.seen)onboard();
 </script>
